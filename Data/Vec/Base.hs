@@ -16,14 +16,14 @@ module Data.Vec.Base where
 
 import Data.Vec.Nat
 
-import Prelude hiding (map,zipWith,foldl,foldr,reverse,take,drop,
-                       head,tail,sum,length,last)
+import Prelude hiding (map,zipWith,foldl,foldr,reverse,
+                       take,drop,head,tail,sum,last)
 import qualified Prelude as P
 
 
 
--- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and @()@ takes the
--- place of @[]@. 
+-- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
+-- @()@ takes the place of @[]@. 
 
 data a :. b = (:.) !a !b
   deriving (Eq,Ord,Read)
@@ -69,7 +69,8 @@ type Vec19 a = a :. (Vec18 a)
 
 
 
--- | The type constraint @Vec n a v@ infers the vector type @v@ from the length @n@, a type-level natural, and underlying component type @a@.
+-- | The type constraint @Vec n a v@ infers the vector type @v@ from the
+-- length @n@, a type-level natural, and underlying component type @a@.  
 -- So @x :: Vec N4 a v => v@ declares @x@ to be a 4-vector of @a@s.
 
 class Vec n a v | n a -> v, v -> n a where
@@ -77,7 +78,7 @@ class Vec n a v | n a -> v, v -> n a where
     -- | Make a uniform vector of a given length. @n@ is a type-level natural.
     -- Use `vec` when the length can be inferred.
   fromList :: [a] -> v
-    -- | turn a list into a vector of known length
+    -- | turn a list into a vector of inferred length
   getElem :: Int -> v -> a
     -- get a vector element, which one is determined at runtime
   setElem :: Int -> a -> v -> v
@@ -175,7 +176,9 @@ instance Snoc v a (a:.v) => Snoc (a:.v) a (a:.a:.v) where
 
 
 
--- | apply a function over each element in a vector
+-- | Apply a function over each element in a vector. Constraint @Map a b u v@
+-- states that @u@ is a vector of @a@s, @v@ is a vector of @b@s with the same
+-- length as @u@, and the function takes @a@s to @b@s.
 
 class Map a b u v | u -> a, v -> b, b u -> v, a v -> u where
   map :: (a -> b) -> u -> v
@@ -194,7 +197,10 @@ strictly2 f a b = (f $! a) $! b
 {-# INLINE strictly2 #-}
 
 
--- | combine two vectors using a binary function
+-- | Combine two vectors using a binary function. The length of the result is
+-- the min of the lengths of the arguments. The constraint @ZipWith a b c u v
+-- w@ states that @u@ is a vector of @a@s, @v@ is a vector of @b@s, @w@ is a
+-- vector of @c@s, and the binary function is of type @a -> b -> c@.
 
 class ZipWith a b c u v w | u->a, v->b, w->c, u v c -> w where
   zipWith :: (a -> b -> c) -> u -> v -> w
@@ -241,14 +247,9 @@ instance Fold a (a':.u) => Fold a (a:.a':.u) where
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
--- | reverse a vector (same as a list)
-
-class Reverse v where
-  reverse :: v -> v
-
-instance (Reverse' () v v) => Reverse v where
-  reverse v = reverse' () v
-  {-# INLINE reverse #-}
+-- | Reverse a vector (same as a list)
+reverse v = reverse' () v
+{-# INLINE reverse #-}
 
 -- Reverse helper function : builds the reversed list as its first argument
 class Reverse' p v v' | p v -> v' where
@@ -282,17 +283,18 @@ instance (Append (a':.v1) v2 v3) => Append (a:.a':.v1) v2 (a:.v3) where
 
 
 
--- | @take n v@ constructs a vector from the first @n@ elements of @v@. @n@ is a type-level
--- natural. For example @take n3 v@ makes a 3-vector of the first three elements of @v@.
+-- | @take n v@ constructs a vector from the first @n@ elements of @v@. @n@ is a
+-- type-level natural. For example @take n3 v@ makes a 3-vector of the first
+-- three elements of @v@.
 
-class Take n a v v' | n v -> v', n v' -> v, v -> a, v' -> a where
+class Take n v v' | n v -> v', n v' -> v where
   take :: n -> v -> v'
 
-instance Take N0 a v () where
+instance Take N0 v () where
   take _ _ = ()
   {-# INLINE take #-}
 
-instance Take n a v v' => Take (Succ n) a (a:.v) (a:.v') where
+instance Take n v v' => Take (Succ n) (a:.v) (a:.v') where
   take _ (a:.v) = a:.(take (undefined::n) v)
   {-# INLINE take #-}
 
@@ -300,30 +302,32 @@ instance Take n a v v' => Take (Succ n) a (a:.v) (a:.v') where
 -- | @drop n v@ strips the first @n@ elements from @v@. @n@ is a type-level
 -- natural. For example @drop n2 v@ drops the first two elements.
 
-class Drop n a v v' | n v -> v', n v' -> v, v -> a, v' -> a where
+class Drop n v v' | n v -> v', n v' -> v where
   drop :: n -> v -> v'
  
-instance Drop N0 a v v where
+instance Drop N0 v v where
   drop _ = id
   {-# INLINE drop #-}
 
-instance (Tail v' v'', Drop n a v v') => Drop (Succ n) a v v'' where
+instance (Tail v' v'', Drop n v v') => Drop (Succ n) v v'' where
   drop _ = tail . drop (undefined::n)
   {-# INLINE drop #-}
 
 
 -- | Get the last element, usually significant for some reason (quaternions,
 -- homogenous coordinates, whatever)
-class Last a v | v -> a where
+class Last v a | v -> a where
   last :: v -> a
 
-instance Last a (a:.()) where 
+instance Last (a:.()) a where 
   last (a:._) = a
   {-# INLINE last #-}
 
-instance Last a (a':.v) => Last a (a:.a':.v) where
+instance Last (a':.v) a => Last (a:.a':.v) a where
   last (a:.v) = last v
   {-# INLINE last #-}
+
+
 
 sum x     = fold (+) x
 {-# INLINE sum #-}
@@ -358,6 +362,7 @@ type Mat34 a = Vec3 (Vec4 a)
 type Mat35 a = Vec3 (Vec5 a)
 type Mat36 a = Vec3 (Vec6 a)
 
+type Mat42 a = Vec4 (Vec2 a)
 type Mat43 a = Vec4 (Vec3 a)
 type Mat44 a = Vec4 (Vec4 a)
 type Mat45 a = Vec4 (Vec5 a)

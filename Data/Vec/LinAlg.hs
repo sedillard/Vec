@@ -580,7 +580,7 @@ invert :: forall n a r m r' m'.
   , Vec n r m     -- m is matrix type
   , Append r r r' -- r' is a row of augmented matrix
   , ZipWith r r r' m m m' -- m' is the augmented matrix
-  , Drop n a r' r -- get the right half of an augmented matrix row
+  , Drop n r' r -- get the right half of an augmented matrix row
   , Map r' r m' m -- get the right half of the augmented matrix
   , SetDiagonal r m -- needed to make identity matrix
   , GaussElim a m'
@@ -601,7 +601,7 @@ invertAndDet :: forall n a r m r' m'.
   , Vec n r m     -- m is matrix type
   , Append r r r' -- r' is a row of augmented matrix
   , ZipWith r r r' m m m' -- m' is the augmented matrix
-  , Drop n a r' r -- get the right half of an augmented matrix row
+  , Drop n r' r -- get the right half of an augmented matrix row
   , Map r' r m' m -- get the right half of the augmented matrix
   , SetDiagonal r m -- needed to make identity matrix
   , GaussElim a m'
@@ -623,7 +623,7 @@ solve :: forall n a v r m r' m'.
   , Vec n r m     -- m is matrix type
   , Snoc r a r'   -- a row of the extended matrix is one longer
   , ZipWith r a r' m r m' -- m' is the augmented matrix
-  , Drop n a r' (a:.()) -- get the right part of an augmented matrix row
+  , Drop n r' (a:.()) -- get the right part of an augmented matrix row
   , Map r' a m' r -- get the right part of the augmented matrix
   , GaussElim a m'
   , BackSubstitute m'
