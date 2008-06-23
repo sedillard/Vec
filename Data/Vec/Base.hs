@@ -27,7 +27,7 @@ import qualified Prelude as P
 -- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
 -- @()@ takes the place of @[]@. 
 
-data a :. b = (:.) !a !b
+data a :. b = !a :. !b
   deriving (Eq,Ord,Read)
 
 infixr :.
@@ -42,7 +42,7 @@ class ShowVec  v where
 instance ShowVec () where
   showVec = show
   {-# INLINE showVec #-}
-  
+
 instance (Show a, ShowVec v) => ShowVec (a:.v) where
   showVec (a:.v) = show a ++ ":." ++ showVec v
   {-# INLINE showVec #-}
