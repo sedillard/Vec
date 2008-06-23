@@ -25,6 +25,7 @@ library
                         Data.Vec.LinAlg,
                         Data.Vec.Nat,
                         Data.Vec.Instances
+                        Data.Vec.Packed
     Extensions: 
                         BangPatterns,
                         EmptyDataDecls,
