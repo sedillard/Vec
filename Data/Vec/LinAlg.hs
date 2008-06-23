@@ -14,7 +14,37 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Data.Vec.LinAlg where
+module Data.Vec.LinAlg 
+  (dot
+  ,normSq
+  ,norm
+  ,normalize
+  ,cross
+  ,homPoint
+  ,homVec
+  ,project
+  ,multvm
+  ,multmv
+  ,multmm
+  ,translate
+  ,column
+  ,row
+  ,Transpose(transpose)
+  ,SetDiagonal(setDiagonal)
+  ,GetDiagonal(getDiagonal)
+  ,scale
+  ,diagonal
+  ,identity
+  ,Det(det)
+  ,cramer'sRule
+  ,NearZero(nearZero)
+  ,GaussElim(gaussElim)
+  ,BackSubstitute(backSubstitute)
+  ,BackSubstitute'(backSubstitute')
+  ,invert
+  ,invertAndDet
+  ,solve
+  ) where
 
 import Prelude hiding (map,zipWith,foldl,foldr,reverse,take,drop,
                        head,tail,sum,length,last)
