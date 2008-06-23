@@ -1,3 +1,5 @@
+{- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
+
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}

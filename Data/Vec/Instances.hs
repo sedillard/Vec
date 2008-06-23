@@ -1,3 +1,5 @@
+{- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
+
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ExistentialQuantification #-}
@@ -67,10 +69,10 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 --Num and Fractional instances. Everything is done component-wise. This is not
 --at all consistent with mathematical convention, but I find it convenient. For
 --instance, fromIntegral and realToFrac create uniform vectors from their
---arguments, so multiplying a vector by a scalar is just 2 * v, and likewise
---for multiplying a matrix by a scalar. The literal 0 gives you either the null
---vector or a matrix of zeros, depending on the type. Anyway, if dot=sum(v*v) offends
---you, then just write your own instances and ignore these.
+--arguments, so multiplying a vector by a scalar is just 2 * v, and likewise for
+--multiplying a matrix by a scalar. The literal 0 gives you either the null
+--vector or a matrix of zeros, depending on the type. Anyway, if dot=sum(v*v)
+--offends you, then just ignore these.
 
 instance
     (Eq (a:.u)

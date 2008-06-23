@@ -1,0 +1,25 @@
+Name:                Vec
+Version:             0.9
+Synopsis:            Fixed-length lists and low-dimensional linear algebra.
+License:             BSD3
+License-file:        LICENSE
+Author:              Scott E. Dillard
+Maintainer:          Scott E. Dillard <sedillard@gmail.com>
+Stability:           Experimental
+
+Description:         
+  Vectors are represented as lists with type-encoded lengths.  The constructor
+  is @:.@, which acts like a cons, both at the value and type levels. @()@ is
+  nil. So @x:.y:.z:.()@ is a 3d vector. Packed representations are provided for
+  2,3 and 4d vectors of Ints, Floats and Doubles. Polymophic functions unfold
+  into very efficient code when applied to packed types.
+
+Build-Depends: base, ghc>=6.8
+Exposed-modules: Data.Vec
+Other-modules: Data.Vec.Base,Data.Vec.LinAlg,Data.Vec.Nat,Data.Vec.Instances
+Extensions: 
+  BangPatterns, EmptyDataDecls, ExistentialQuantification, FlexibleInstances, 
+  FlexibleContexts, FunctionalDependencies, MultiParamTypeClasses, 
+  NoMonomorphismRestriction, ScopedTypeVariables, TypeOperators, 
+  TypeSynonymInstances, UndecidableInstances
+Ghc-options: -O2
