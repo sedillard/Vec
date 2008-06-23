@@ -126,7 +126,7 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v
   -- 17-dimensional vector of Floats (but WHY?!)
 
 
---invert a lot of 4x4 matrices. Compile with
+-- Invert a lot of 4x4 matrices. Compile with
 --
 --  ghc --make Examples.hs -O2 -fvia-C -optc-O2 
 --    -fexcess-precision -funfolding-use-threshold=999 
@@ -136,6 +136,11 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v
 --
 -- Simpler functions, like det, cramer'sRule, multmv, multmm, don't need
 -- nearly as much optimization.  -O2 handles them just fine.
+--
+-- A C implementation, baseline.c, is provided with the library for
+-- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
+-- and this program, compiled as above, runs in 5.3sec. But really we should
+-- just import baseline.c using the ffi. (Boring)
 --
 -- *(at that nice coffee shop across town)
 

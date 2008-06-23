@@ -25,7 +25,7 @@ import Control.Monad
 import Data.Maybe
 
 
--- dot / inner / scalar product
+-- | dot / inner / scalar product
 dot u v = sum (u*v)
 {-# INLINE dot #-}
 
@@ -37,7 +37,8 @@ normSq v = dot v v
 norm v = sqrt (dot v v)
 {-# INLINE norm #-}
 
--- | a unit vector in the direction of v, which is assumed non-null
+-- | @normalize v@ is a unit vector in the direction of @v@. @v@ is assumed
+-- non-null.
 normalize v = map (/(norm v)) v
 {-# INLINE normalize #-}
 
@@ -49,14 +50,14 @@ cross (ux:.uy:.uz:.()) (vx:.vy:.vz:.()) =
 
 -- | lift a point into homogenous coordinates
 homPoint v = snoc v 1
+{-# INLINE homPoint #-}
 
 -- | point-at-infinity in homogenous coordinates
 homVec   v = snoc v 0
+{-# INLINE homVec   #-}
 
 -- | project a vector from homogenous coordinates. Last vector element is assumed non-zero.
 project  v = case reverse v of (w:.u) -> reverse (u/vec w)
-{-# INLINE homVec   #-}
-{-# INLINE homPoint #-}
 {-# INLINE project  #-}
 
 
