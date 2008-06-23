@@ -69,8 +69,6 @@ void copy( double a[DIM][DIM], double b[DIM][DIM] )
   
 }
 
-int n = 3000000;
-
 double m3[3][3] = 
     {{ 1, 2, 3},
      { 4, 5, 6},
@@ -82,18 +80,14 @@ double m4[4][4] =
      { 9,10,11,12},
      {13,13,15,16}};
 
-int main ()
+int main (int argc, char ** argv)
 { 
+  int n = atoi(argv[1]);
   double (*a)[DIM][DIM] = malloc( n * sizeof(double[DIM][DIM]) );
   double (*b)[DIM][DIM] = malloc( n * sizeof(double[DIM][DIM]) );
   int i,j;
   for( i=0; i<n; ++i) copy(a[i],m4);
   for( i=0; i<n; ++i) copy(b[i],a[i]), invert(b[i]);
-  /*
-  for( i=0; i<n; ++i) copy(a[i],b[i]), invert(a[i]);
-  for( i=0; i<n; ++i) copy(b[i],a[i]), invert(b[i]);
-  */
-
   
   for ( i=0; i<DIM; ++i ) {
     for ( j=0; j<DIM; ++j ) {

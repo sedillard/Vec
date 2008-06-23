@@ -2,10 +2,12 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 import Data.Vec as V
+import Prelude hiding (head)
+import qualified Prelude as P 
 
 import Foreign
 import Control.Monad
-
+import System
 
 --Some sample vectors and matrices
 --
@@ -113,7 +115,7 @@ t17 = getElem t16 v3 --get element using Ints, with bounds checking.
 t18 = 0 :: (Num v, Vec N17 Float v) => v  -- 17-dimensional vector of Floats (but WHY?!)
 
 
---invert a million 4x4 matrices. Compile with
+--invert a lot of 4x4 matrices. Compile with
 --
 --  ghc --make Examples.hs -O2 -fvia-C -optc-O2 
 --    -fexcess-precision -funfolding-use-threshold=999 
@@ -124,8 +126,7 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v  -- 17-dimensional vector of Floats (bu
 -- Simpler functions, like det, cramer'sRule, multmv, multmm, don't need nearly
 -- as much optimization.  -O2 handles them just fine.
 
-testLoop1 =
-  let n = 1000000 in
+testLoop1 n =
   do
   a <- mallocArray n 
   b <- mallocArray n
@@ -136,7 +137,5 @@ testLoop1 =
   peek b >>= print
 
 
-main =
-  do
-  testLoop1
+main = testLoop1 =<< return . read . P.head =<< getArgs
 
