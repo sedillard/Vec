@@ -705,7 +705,6 @@ invertAndDet m =
         i = identity :: m
 {-# INLINE invertAndDet #-}
 
-
 -- | Solution of linear system by Gaussian elimination. Returns @Nothing@
 -- if no solution. 
 solve :: forall n a v r m r' m'. 
