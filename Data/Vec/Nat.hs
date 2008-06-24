@@ -9,10 +9,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-
+-- | Type level naturals. @Ni@ is a type, @ni@ an undefined value of that type,
+-- for @i <- [0..19]@
 module Data.Vec.Nat where
 
---Type level naturals. 
 
 data N0
 data Succ a

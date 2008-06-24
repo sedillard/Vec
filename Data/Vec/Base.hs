@@ -13,19 +13,22 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# HADDOCK_OPTIONS prune #-}
 
 module Data.Vec.Base where
 
 import Data.Vec.Nat
 
 import Prelude hiding (map,zipWith,foldl,foldr,reverse,
-                       take,drop,head,tail,sum,last)
+                       take,drop,head,tail,sum,last,product,
+                       minimum,maximum)
 import qualified Prelude as P
 
 
 
 -- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
--- @()@ takes the place of @[]@. 
+-- @()@ takes the place of @[]@. (The list of instances here is not meant to be
+-- readable.)
 
 data a :. b = !a :. !b
   deriving (Eq,Ord,Read)
@@ -36,6 +39,8 @@ infixr :.
 instance (Show a, ShowVec v) => Show (a:.v) where
   show (a:.v) = "(" ++ show a ++ ":." ++ showVec v ++ ")"
 
+
+-- | Helper to keep parentheses at bay. Just use @show@ as usual.
 class ShowVec  v where
   showVec :: v -> String
 
@@ -48,7 +53,7 @@ instance (Show a, ShowVec v) => ShowVec (a:.v) where
   {-# INLINE showVec #-}
 
 
--- some vector type abbreviations
+-- * Vector Types
 type Vec2  a = a :. a :. ()
 type Vec3  a = a :. (Vec2 a)
 type Vec4  a = a :. (Vec3 a)
@@ -76,18 +81,18 @@ type Vec19 a = a :. (Vec18 a)
 -- So @x :: Vec N4 a v => v@ declares @x@ to be a 4-vector of @a@s.
 
 class Vec n a v | n a -> v, v -> n a where
+  -- | Make a uniform vector of a given length. @n@ is a type-level natural.
+  -- Use `vec` when the length can be inferred.
   mkVec :: n -> a -> v
-    -- | Make a uniform vector of a given length. @n@ is a type-level natural.
-    -- Use `vec` when the length can be inferred.
-  fromList :: [a] -> v
-    -- | turn a list into a vector of inferred length
-  getElem :: Int -> v -> a
-    -- get a vector element, which one is determined at runtime
-  setElem :: Int -> a -> v -> v
-    -- set a vector element, which one is determined at runtime
 
--- |Make a uniform vector. The length is inferred.
-vec = mkVec undefined
+  -- | turn a list into a vector of inferred length
+  fromList :: [a] -> v
+
+  -- | get a vector element, which one is determined at runtime
+  getElem :: Int -> v -> a
+
+  -- | set a vector element, which one is determined at runtime
+  setElem :: Int -> a -> v -> v
 
 instance Vec N1 a ( a :. () ) where
   mkVec _ a = a :. ()
@@ -120,6 +125,11 @@ instance Vec (Succ n) a (a':.v) => Vec (Succ (Succ n)) a (a:.a':.v) where
   {-# INLINE fromList #-}
 
 
+-- | Make a uniform vector. The length is inferred.
+vec ::  (Vec n a v) => a -> v
+vec = mkVec undefined
+{-# INLINE vec #-}
+
 
 -- | get or set a vector element, known at compile
 --time. Use the Nat types to access vector components. For instance, @get n0@
@@ -142,7 +152,10 @@ instance Access n a v => Access (Succ n) a (a :. v) where
   {-# INLINE set #-}
   {-# INLINE get #-}
 
--- | The first element. (Same as lists)
+
+-- * List-like functions
+
+-- | The first element.
 
 class Head v a | v -> a  where 
   head :: v -> a
@@ -152,7 +165,7 @@ instance Head (a :. as) a where
   {-# INLINE head #-}
 
 
--- | All but the first element. (Same as lists)
+-- | All but the first element. 
 
 class Tail v v_ | v -> v_ where 
   tail :: v -> v_
@@ -162,25 +175,11 @@ instance Tail (a :. as) as where
   {-# INLINE tail #-}
 
 
--- | @snoc v a@ appends the element a to the end of v. 
-
-class Snoc v a v' | v a -> v', v' -> v a where 
-  snoc :: v -> a -> v'
-
-instance Snoc () a (a:.()) where
-  snoc _ a = (a:.())
-  {-# INLINE snoc #-}
-
-instance Snoc v a (a:.v) => Snoc (a:.v) a (a:.a:.v) where
-  snoc (b:.v) a = b:.(snoc v a)
-  {-# INLINE snoc #-}
-
-
 
 
 -- | Apply a function over each element in a vector. Constraint @Map a b u v@
 -- states that @u@ is a vector of @a@s, @v@ is a vector of @b@s with the same
--- length as @u@, and the function takes @a@s to @b@s.
+-- length as @u@, and the function is of type @a -> b@.
 
 class Map a b u v | u -> a, v -> b, b u -> v, a v -> u where
   map :: (a -> b) -> u -> v
@@ -224,10 +223,6 @@ instance
       {-# INLINE zipWith #-}
 
 
---strictly2 : strict binary function application
-strictly2 f a b = (f $! a) $! b
-{-# INLINE strictly2 #-}
-
 -- | Fold a function over a vector. 
 
 class Fold a v | v -> a where
@@ -237,21 +232,21 @@ class Fold a v | v -> a where
 
 instance Fold a (a:.()) where
   fold  f   (a:._) = a 
-  foldl f z (a:._) = strictly2 f z a
-  foldr f z (a:._) = strictly2 f a z
+  foldl f z (a:._) = (f $! z) $! a
+  foldr f z (a:._) = (f $! a) $! z
   {-# INLINE fold #-}
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
 instance Fold a (a':.u) => Fold a (a:.a':.u) where
-  fold  f   (a:.v) = strictly2 f a (fold f v)
-  foldl f z (a:.v) = strictly2 f (foldl f z v) a
-  foldr f z (a:.v) = strictly2 f a (foldr f z v)
+  fold  f   (a:.v) = (f $! a) $! (fold f v)
+  foldl f z (a:.v) = (f $! (foldl f z v)) $! a
+  foldr f z (a:.v) = (f $! a) $! (foldr f z v)
   {-# INLINE fold #-}
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
--- | Reverse a vector (same as a list)
+-- | Reverse a vector 
 reverse v = reverse' () v
 {-# INLINE reverse #-}
 
@@ -268,7 +263,7 @@ instance Reverse' (a:.p) v v' => Reverse' p (a:.v) v' where
   {-# INLINE reverse' #-}
 
 
--- | append two vectors (same as a list)
+-- | Append two vectors 
 
 class Append v1 v2 v3 | v1 v2 -> v3, v1 v3 -> v2 where 
   append :: v1 -> v2 -> v3
@@ -331,20 +326,42 @@ instance Last (a':.v) a => Last (a:.a':.v) a where
   last (a:.v) = last v
   {-# INLINE last #-}
 
+-- | @snoc v a@ appends the element a to the end of v. 
+
+class Snoc v a v' | v a -> v', v' -> v a where 
+  snoc :: v -> a -> v'
+
+instance Snoc () a (a:.()) where
+  snoc _ a = (a:.())
+  {-# INLINE snoc #-}
+
+instance Snoc v a (a:.v) => Snoc (a:.v) a (a:.a:.v) where
+  snoc (b:.v) a = b:.(snoc v a)
+  {-# INLINE snoc #-}
 
 
+
+-- | sum of vector elements
+sum ::  (Fold a v, Num a) => v -> a
 sum x     = fold (+) x
 {-# INLINE sum #-}
 
+-- | product of vector elements
+product ::  (Fold a v, Num a) => v -> a
 product x = fold (*) x
 {-# INLINE product #-}
 
+-- | maximum vector element
+maximum ::  (Fold a v, Ord a) => v -> a
 maximum x = fold max x
 {-# INLINE maximum #-}
 
+-- | minimum vector element
+minimum ::  (Fold a v, Ord a) => v -> a
 minimum x = fold min x
 {-# INLINE minimum #-}
 
+toList ::  (Fold a v) => v -> [a]
 toList = foldr (:) [] 
 {-# INLINE toList #-}
 
@@ -354,7 +371,7 @@ toList = foldr (:) []
 
 
 
--- Some matrices
+-- * Matrix Types
 
 type Mat22 a = Vec2 (Vec2 a)
 type Mat23 a = Vec2 (Vec3 a)
@@ -375,21 +392,25 @@ type Mat47 a = Vec4 (Vec7 a)
 type Mat48 a = Vec4 (Vec8 a)
 
 -- | convert a matrix to a list-of-lists
+matToLists ::  (Fold a v, Fold v m) => m -> [[a]]
 matToLists   = (P.map toList) . toList
 {-# INLINE matToLists   #-}
 
 -- | convert a matrix to a list in row-major order
+matToList  ::  (Fold a v, Fold v m) => m -> [a]
 matToList    = concat . matToLists
 {-# INLINE matToList    #-}
 
 -- | convert a list-of-lists into a matrix
+matFromLists :: (Vec j a v, Vec i v m) => [[a]] -> m
 matFromLists = fromList . (P.map fromList)
 {-# INLINE matFromLists #-}
 
 -- | convert a list into a matrix. (row-major order)
-matFromList :: forall m n row mat elem. (Vec m row mat, Vec n elem row, Nat n) => [elem] -> mat
-matFromList  = matFromLists . groupsOf (nat(undefined::n))
+matFromList :: forall i j v m a. (Vec i v m, Vec j a v, Nat i) => [a] -> m
+matFromList  = matFromLists . groupsOf (nat(undefined::i))
   where groupsOf n xs = let (a,b) = splitAt n xs in a:(groupsOf n b)
 {-# INLINE matFromList  #-}
+
 
 

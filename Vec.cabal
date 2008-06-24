@@ -4,7 +4,7 @@ License:             BSD3
 License-file:        LICENSE
 Author:              Scott E. Dillard
 Maintainer:          Scott E. Dillard <sedillard@gmail.com>
-Stability:           Beta
+Stability:           Experimental
 Synopsis:            Fixed-length lists and low-dimensional linear algebra.
 Description:         
    Vectors are represented by lists with type-encoded lengths. The constructor
@@ -19,14 +19,9 @@ Build-type:          Simple
 
 library
     Build-Depends:      base
-    Ghc-options: 
-      -O2 
-      -funfolding-creation-threshold=9999
-      -funfolding-use-threshold=9999
 
-    Exposed-modules:    Data.Vec
-
-    Other-modules:      Data.Vec.Base,
+    Exposed-modules:    Data.Vec 
+                        Data.Vec.Base,
                         Data.Vec.LinAlg,
                         Data.Vec.Nat,
                         Data.Vec.Instances

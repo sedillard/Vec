@@ -71,7 +71,7 @@ t3 = v3*v3' -- OH GOD NO WHAT IS THIS?!?!
 t4 = V.sum(v3*v3') --dot product. (See it's not so bad)
 
 --general list functions, map, fold, zipWith
-lInfintiyNorm = V.fold max
+lInfintiyNorm = V.fold (max . abs)
 boundingBox xs = (foldl1 (V.zipWith min) xs, foldl1 (V.zipWith max) xs)
 
 --more list functions: head,tail,last,snoc,append,reverse,take,drop.

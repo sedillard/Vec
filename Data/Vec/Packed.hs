@@ -8,15 +8,16 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Packed vectors : use these whenever possible. The regular vector type is
+-- just a gussied up linked list, but when vector functions are applied to
+-- these types, bracketed by @'pack'@ and @'unpack'@, then things unfold into
+-- perfectly optimized code.
+
 module Data.Vec.Packed where
 
 import Data.Vec.Base as V
 
--- packed vectors : use these whenever possible. The regular vector type is
--- just a gussied up linked list, but when vector functions are applied to
--- these types, bracketed by pack and unpack, then things unfold into
--- perfectly optimized code.
-
+-- * Packed Vector Types
 data Vec2I = Vec2I {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int 
 
@@ -53,7 +54,7 @@ data Vec4D = Vec4D {-#UNPACK#-} !Double
                    {-#UNPACK#-} !Double
                    {-#UNPACK#-} !Double
 
--- (Semi) packed matrices. The rows are packed.
+-- * Packed Matrix Types. 
 type Mat22I = Vec2 Vec2I 
 type Mat23I = Vec2 Vec3I 
 type Mat33I = Vec3 Vec3I 
@@ -73,15 +74,20 @@ type Mat34D = Vec3 Vec4D
 type Mat44D = Vec4 Vec4D 
 
 
--- pack and unpack a matrix
+-- | pack a matrix
+packMat ::  (Map v pv m pm, PackedVec pv v) => m -> pm
 packMat = V.map pack 
-unpackMat = V.map unpack
 {-# INLINE packMat #-}
+
+-- | unpack a matrix
+unpackMat ::  (Map pv v pm m, PackedVec pv v) => pm -> m
+unpackMat = V.map unpack
 {-# INLINE unpackMat #-}
 
--- PackedVec class : relates a packed vector type to its unpacked type
--- For now, the fundep is not bijective -- It may be advantageous to have
--- multiple packed representations for a canonical vector type. This may change.
+-- | PackedVec class : relates a packed vector type to its unpacked type For
+-- now, the fundep is not bijective -- It may be advantageous to have multiple
+-- packed representations for a canonical vector type. This may change. In the
+-- meantime, you may have to annotate return types.
 class PackedVec pv v | pv -> v  where
   pack   :: v -> pv
   unpack :: pv -> v
