@@ -81,23 +81,17 @@ boundingBox xs = (foldl1 (V.zipWith min) xs, foldl1 (V.zipWith max) xs)
 
 t5 = multmv m4 v4 --matrix * column-vector multiplication
 t5' = multvm v4 m4 --row-vector * matrix multiplication
-t6 = multmv m3' v3' 
+t6 = multmv m3' v3
   --does NOT fix type of m3'. Could be 2x3, 3x3, 100x3, etc., and result type
   --will vary accordingly. A type annotation is needed here, on either m3' or
   --t6.
 
+t6' = multmv (m3'::Mat33 Float) v3 --now type of t6' is inferred as Vec3 Float
 
-
-t6' = multmv (m3'::Mat33 Float) v3' --now type of t6' is inferred as Vec3 Float
-
--- t6'' = multmv (1::Mat32 Float) v3' 
+-- t6'' = multmv (1::Mat32 Float) v3 
 -- type error! Can't multiply a 3x2 matrix by a 3-vector
 
-t6''' = multmv (1::Mat43 Float) v3' --t6''' is Vec4 Float
-
-t7 = pack $ multmv (unpackMat m3p) (unpack v3p) 
-  --bracketing expressions with pack/unpack generates excellent code.
-  --unpackMat = V.map unpack
+t7 = multmv (1::Mat43 Float) v3 --t7 is Vec4 Float
 
 --get the determinant of a matrix
 t8 = det m3
@@ -145,7 +139,6 @@ multmm4d a b = packMat $ multmm (unpackMat a) (unpackMat b)
 --      -funfolding-creation-threshold=999
 --
 -- Go get some coffee, then prepare to be almost impressed!
---
 
 invertMany n =
   do
@@ -158,6 +151,8 @@ invertMany n =
     -- Storable instances also generate tight code.
   peek b >>= print
 
+main = invertMany =<< return . read . P.head =<< getArgs
+
 -- A C implementation, baseline.c, is provided with the library for
 -- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
 -- and this program, compiled as above, runs in 5.3sec. But really we should
@@ -166,5 +161,4 @@ invertMany n =
 -- Simpler functions, like det, multmv, multmm, don't need
 -- nearly as much optimization.  -O2 handles them just fine.
 
-main = invertMany =<< return . read . P.head =<< getArgs
 
