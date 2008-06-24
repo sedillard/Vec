@@ -377,7 +377,7 @@ type Mat22 a = Vec2 (Vec2 a)
 type Mat23 a = Vec2 (Vec3 a)
 type Mat24 a = Vec2 (Vec4 a)
 
-type Mat32 a = Vec3 (Vec3 a)
+type Mat32 a = Vec3 (Vec2 a)
 type Mat33 a = Vec3 (Vec3 a)
 type Mat34 a = Vec3 (Vec4 a)
 type Mat35 a = Vec3 (Vec5 a)

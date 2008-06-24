@@ -163,9 +163,6 @@ invertMany n =
 -- and this program, compiled as above, runs in 5.3sec. But really we should
 -- just import baseline.c using the ffi. (Boring)
 --
--- For some reason, when this is installed as a library, it adds about a second
--- on to the above running time.
---
 -- Simpler functions, like det, multmv, multmm, don't need
 -- nearly as much optimization.  -O2 handles them just fine.
 

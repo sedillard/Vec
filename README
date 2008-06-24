@@ -90,5 +90,5 @@ hmatrix, by Alberto Ruiz :
 blas bindings, by Patrick Perry :
   http://hackage.haskell.org/cgi-bin/hackage-scripts/package/blas
 
-templatized geometry library (C++) :
+templatized geometry library, by Oliver Kreylos (C++) :
   http://graphics.cs.ucdavis.edu/~okreylos/ResDev/Geometry/index.html
