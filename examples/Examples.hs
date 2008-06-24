@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
+
 import Data.Vec as V
 import Prelude hiding (head)
 import qualified Prelude as P 
@@ -8,6 +9,7 @@ import qualified Prelude as P
 import Foreign
 import Control.Monad
 import System
+
 
 --Some sample vectors and matrices
 --
@@ -126,6 +128,16 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v
   -- 17-dimensional vector of Floats (but WHY?!)
 
 
+multmm4d :: Mat44D -> Mat44D -> Mat44D 
+multmm4d a b = packMat $ multmm (unpackMat a) (unpackMat b)
+  -- this will unfold into tight code. Compile with ghc -O2 -ddump-simpl and
+  -- search for multmm4d. But before you do that, comment out the 
+  -- remainder of this program. It generates absurd amounts of core.
+
+
+
+
+
 -- Invert a lot of 4x4 matrices. Compile with
 --
 --  ghc --make Examples.hs -O2 -fvia-C -optc-O2 
@@ -134,21 +146,8 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v
 --
 -- Go get some coffee, then prepare to be almost impressed!
 --
--- A C implementation, baseline.c, is provided with the library for
--- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
--- and this program, compiled as above, runs in 5.3sec. But really we should
--- just import baseline.c using the ffi. (Boring)
---
--- For some reason, when this is installed as a library, it adds about a second
--- on to the above running time.
---
--- Simpler functions, like det, cramer'sRule, multmv, multmm, don't need
--- nearly as much optimization.  -O2 handles them just fine.
 
-
-invert4d = packMat . fst . invertAndDet . unpackMat 
-
-testLoop1 n =
+invertMany n =
   do
   a <- mallocArray n 
   b <- mallocArray n
@@ -159,6 +158,16 @@ testLoop1 n =
     -- Storable instances also generate tight code.
   peek b >>= print
 
+-- A C implementation, baseline.c, is provided with the library for
+-- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
+-- and this program, compiled as above, runs in 5.3sec. But really we should
+-- just import baseline.c using the ffi. (Boring)
+--
+-- For some reason, when this is installed as a library, it adds about a second
+-- on to the above running time.
+--
+-- Simpler functions, like det, multmv, multmm, don't need
+-- nearly as much optimization.  -O2 handles them just fine.
 
-main = testLoop1 =<< return . read . P.head =<< getArgs
+main = invertMany =<< return . read . P.head =<< getArgs
 
