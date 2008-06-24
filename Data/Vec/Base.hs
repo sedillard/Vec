@@ -186,17 +186,14 @@ class Map a b u v | u -> a, v -> b, b u -> v, a v -> u where
   map :: (a -> b) -> u -> v
 
 instance Map a b (a :. ()) (b :. ()) where
-  map f (x :. ()) = (f $! x) :. ()
+  map f (x :. ()) = (f x) :. ()
   {-# INLINE map #-}
 
 instance Map a b (a':.u) (b':.v) => Map a b (a:.a':.u) (b:.b':.v) where
-  map f (x:.v) = (f $! x):.(map f v)
+  map f (x:.v) = (f x):.(map f v)
   {-# INLINE map #-}
 
 
---strictly2 : strict binary function application
-strictly2 f a b = (f $! a) $! b
-{-# INLINE strictly2 #-}
 
 
 -- | Combine two vectors using a binary function. The length of the result is
@@ -208,23 +205,28 @@ class ZipWith a b c u v w | u->a, v->b, w->c, u v c -> w where
   zipWith :: (a -> b -> c) -> u -> v -> w
 
 instance ZipWith a b c (a:.()) (b:.()) (c:.()) where
-  zipWith f (x:._) (y:._) = strictly2 f x y :.()
+  zipWith f (x:._) (y:._) = f x y :.()
   {-# INLINE zipWith #-}
 
 instance ZipWith a b c (a:.()) (b:.b:.bs) (c:.()) where
-  zipWith f (x:._) (y:._) = strictly2 f x y :.()
+  zipWith f (x:._) (y:._) = f x y :.()
   {-# INLINE zipWith #-}
 
 instance ZipWith a b c (a:.a:.as) (b:.()) (c:.()) where
-  zipWith f (x:._) (y:._) = strictly2 f x y :.()
+  zipWith f (x:._) (y:._) = f x y :.()
   {-# INLINE zipWith #-}
 
 instance 
   ZipWith a b c (a':.u) (b':.v) (c':.w) 
   => ZipWith a b c (a:.a':.u) (b:.b':.v) (c:.c':.w) 
     where
-      zipWith f (x:.u) (y:.v) = (strictly2 f x y):.(zipWith f u v)
+      zipWith f (x:.u) (y:.v) = f x y :. zipWith f u v
       {-# INLINE zipWith #-}
+
+
+--strictly2 : strict binary function application
+strictly2 f a b = (f $! a) $! b
+{-# INLINE strictly2 #-}
 
 -- | Fold a function over a vector. 
 

@@ -65,4 +65,7 @@ import Data.Vec.Instances
 -- annotations usually make them go away.
 --
 -- see previous independent work by David Menendez : 
---  http://haskell.org/pipermail/haskell/2005-May/015815.html
+--   http://haskell.org/pipermail/haskell/2005-May/015815.html
+-- and Oleg Kiselyov :
+--   http://okmij.org/ftp/papers/number-parameterized-types.pdf
+

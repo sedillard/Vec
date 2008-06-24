@@ -69,10 +69,11 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 --Num and Fractional instances. Everything is done component-wise. This is not
 --at all consistent with mathematical convention, but I find it convenient. For
 --instance, fromIntegral and realToFrac create uniform vectors from their
---arguments, so multiplying a vector by a scalar is just 2 * v, and likewise for
---multiplying a matrix by a scalar. The literal 0 gives you either the null
+--arguments, so multiplying a vector by a scalar is just 2 * v, and likewise
+--for multiplying a matrix by a scalar. The literal 0 gives you either the null
 --vector or a matrix of zeros, depending on the type. Anyway, if dot=sum(v*v)
---offends you, then just ignore these.
+--offends you, then just ignore these. You're free to define whatever goofy
+--operators you'd like.
 
 instance
     (Eq (a:.u)
