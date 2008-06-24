@@ -1,23 +1,28 @@
 Name:                Vec
-Version:             0.9
+Version:             0.9.0
 License:             BSD3
 License-file:        LICENSE
 Author:              Scott E. Dillard
 Maintainer:          Scott E. Dillard <sedillard@gmail.com>
-Stability:           Experimental
+Stability:           Beta
 Synopsis:            Fixed-length lists and low-dimensional linear algebra.
 Description:         
-  Vectors are represented as lists with type-encoded lengths.  The constructor
-  is @:.@, which acts like a cons, both at the value and type levels. @()@ is
-  nil. So @x:.y:.z:.()@ is a 3d vector. Packed representations are provided for
-  2,3 and 4d vectors of Ints, Floats and Doubles. Polymophic functions unfold
-  into very efficient code when applied to packed types.
+   Vectors are represented by lists with type-encoded lengths. The constructor
+   is @:.@, which acts like a cons both at the value and type levels, with @()@
+   taking the place of nil. So @x:.y:.z:.()@ is a 3d vector. The library
+   provides a set of common list-like functions (map, fold, etc) for working
+   with vectors. Built up from these functions are a small but useful set of
+   linear algebra operations: matrix multiplication, determinants, solving
+   linear systems, inverting matrices.
 Cabal-version:       >=1.2
 Build-type:          Simple
 
 library
     Build-Depends:      base
-    Ghc-options: -O2 -fvia-C -optc-O2 -fexcess-precision
+    Ghc-options: 
+      -O2 
+      -funfolding-creation-threshold=9999
+      -funfolding-use-threshold=9999
 
     Exposed-modules:    Data.Vec
 

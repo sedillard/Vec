@@ -66,14 +66,14 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
   {-# INLINE pokeElemOff #-}
 
 
---Num and Fractional instances. Everything is done component-wise. This is not
---at all consistent with mathematical convention, but I find it convenient. For
---instance, fromIntegral and realToFrac create uniform vectors from their
---arguments, so multiplying a vector by a scalar is just 2 * v, and likewise
---for multiplying a matrix by a scalar. The literal 0 gives you either the null
---vector or a matrix of zeros, depending on the type. Anyway, if dot=sum(v*v)
---offends you, then just ignore these. You're free to define whatever goofy
---operators you'd like.
+-- Num and Fractional instances : All arithmetic is done component-wise and
+-- literals construct uniform vectors and matrices. 
+--
+-- The rule is simple : 
+--    If the method is unary, it's a map.  
+--    If it's binary, it's a zipWith.
+--
+-- You are free to ignore these instances if the definition of (*) offends you.
 
 instance
     (Eq (a:.u)

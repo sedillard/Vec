@@ -132,17 +132,19 @@ t18 = 0 :: (Num v, Vec N17 Float v) => v
 --    -fexcess-precision -funfolding-use-threshold=999 
 --      -funfolding-creation-threshold=999
 --
--- Go get some coffee*, then prepare to have YOUR SOCKS NEARLY BLOWN OFF!
---
--- Simpler functions, like det, cramer'sRule, multmv, multmm, don't need
--- nearly as much optimization.  -O2 handles them just fine.
+-- Go get some coffee, then prepare to be almost impressed!
 --
 -- A C implementation, baseline.c, is provided with the library for
 -- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
 -- and this program, compiled as above, runs in 5.3sec. But really we should
 -- just import baseline.c using the ffi. (Boring)
 --
--- *(at that nice coffee shop across town)
+-- For some reason, when this is installed as a library, it adds about a second
+-- on to the above running time.
+--
+-- Simpler functions, like det, cramer'sRule, multmv, multmm, don't need
+-- nearly as much optimization.  -O2 handles them just fine.
+
 
 invert4d = packMat . fst . invertAndDet . unpackMat 
 
