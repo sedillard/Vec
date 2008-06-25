@@ -66,7 +66,7 @@ triangles (x:xs) = map (x:.) $ pairs xs
 -- compute overlap : for each pair of triangles, one from each polygon, sum the
 -- the areas of intersection of the two triangles, multiplied by the product of
 -- the signs. 
-overlapArea as bs = sum $
+overlapArea as bs = sum' $
     [ (sn a * sn b) * (sum' . map (abs . signedArea) $ (triTriClip a b) )
     | a <- triangles as, b <- triangles bs ]
   where sn = signum . signedArea      
