@@ -37,7 +37,7 @@ module Data.Vec.LinAlg
   ,scale
   ,diagonal
   ,identity
-  ,Det(det)
+  ,det
   ,cramer'sRule
   ,NearZero(nearZero)
   ,GaussElim(gaussElim)
@@ -395,15 +395,13 @@ instance
 -- enforce that here. But really I have no clue.
 
 
-class Det n a m | m -> a where
-  -- | Determinant by minor expansion. Unfolds into a closed form expression.
-  -- This should be the fastest way for 4x4 and smaller, but @snd . gaussElim@
-  -- works too.
-  det :: m -> a
+-- | Determinant by minor expansion. Unfolds into a closed form expression.
+-- This should be the fastest way for 4x4 and smaller, but @snd . gaussElim@
+-- works too.
 
-instance (Vec n a r, Vec n r m, Det' a m) => Det n a m where
-  det = det'
-  {-# INLINE det #-}
+det :: forall n a r m. (Vec n a r, Vec n r m, Det' a m) => m -> a
+det = det'
+{-# INLINE det #-}
 
 
 
