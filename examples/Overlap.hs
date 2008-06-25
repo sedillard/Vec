@@ -47,8 +47,8 @@ triLineClip p0 p1 p2 ts =
       b = isect p0 p1 t0 t2
   in  case count of 
         0 -> []
-        1 -> [(t0:.a:.b:.())]
-        2 -> [(t1:.b:.a:.()),(t2:.b:.t1:.())]
+        1 -> [t0:.a:.b:.()]
+        2 -> [t1:.b:.a:.(),t2:.b:.t1:.()]
         3 -> [ts] 
 
 -- triangle/triangle clip : successive triangle/line clipping
