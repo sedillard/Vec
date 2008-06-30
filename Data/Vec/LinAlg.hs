@@ -500,9 +500,10 @@ instance NearZero Rational
 -- first row. Does not try to find the 'best' pivot, only an acceptable one:
 -- matrices are assumed small, roundoff error should be negligible. 
 
-class Pivot1 a m | m -> a where
+class Pivot1 a m where 
   pivot1 :: m -> Maybe (m,a)
 
+--this instance prevents a fundep inferring type of a from m. 
 instance Pivot1 a () where
   pivot1 _ = Nothing
 
