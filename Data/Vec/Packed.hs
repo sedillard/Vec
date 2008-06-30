@@ -20,39 +20,48 @@ import Data.Vec.Base as V
 -- * Packed Vector Types
 data Vec2I = Vec2I {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int 
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec3I = Vec3I {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec4I = Vec4I {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int 
                    {-#UNPACK#-} !Int
                    {-#UNPACK#-} !Int
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec2F = Vec2F {-#UNPACK#-} !Float 
                    {-#UNPACK#-} !Float 
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec3F = Vec3F {-#UNPACK#-} !Float 
                    {-#UNPACK#-} !Float 
                    {-#UNPACK#-} !Float
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec4F = Vec4F {-#UNPACK#-} !Float 
                    {-#UNPACK#-} !Float 
                    {-#UNPACK#-} !Float
                    {-#UNPACK#-} !Float
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec2D = Vec2D {-#UNPACK#-} !Double 
                    {-#UNPACK#-} !Double 
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec3D = Vec3D {-#UNPACK#-} !Double 
                    {-#UNPACK#-} !Double 
                    {-#UNPACK#-} !Double
+                   deriving (Eq,Ord,Show,Read)
 
 data Vec4D = Vec4D {-#UNPACK#-} !Double 
                    {-#UNPACK#-} !Double 
                    {-#UNPACK#-} !Double
                    {-#UNPACK#-} !Double
+                   deriving (Eq,Ord,Show,Read)
 
 -- * Packed Matrix Types. 
 type Mat22I = Vec2 Vec2I 
