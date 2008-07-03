@@ -16,7 +16,7 @@ Description:
    linear systems, inverting matrices.
 Cabal-version:       >=1.2
 Build-type:          Simple
-Category:            Math,Graphics
+Category:            Data,Math
 
 library
     Build-Depends:      base

@@ -1,4 +1,6 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
+{-# OPTIONS -cpp #-}
+
 
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -11,11 +13,40 @@
 -- | Packed vectors : use these whenever possible. The regular vector type is
 -- just a gussied up linked list, but when vector functions are applied to
 -- these types, bracketed by @'pack'@ and @'unpack'@, then things unfold into
--- perfectly optimized code.
+-- neatly optimized code. 
+-- 
+-- Storable, Num, Fractional, Fold, Map, and ZipWith instances are provided
+-- for packed vectors, so some operations do not require pack/unpack. For
+-- example, @'dot'@ does not require pack/unpack because it is defined in
+-- terms of @'zipWith'@ and @'fold'@. However @'transpose'@, @'det'@ and
+-- @'gaussElim'@ and most others are recursive, and so you'll still need to
+-- use pack/unpack with these. This goes for @'multmm'@ as well because it
+-- uses @'transpose'@, and @'multmv'@ does not need its arguments to be
+-- unpacked, but the result will be a polymorphic vector (:.) so you will want
+-- to pack it again. This is all very experimental and likely to change.
 
 module Data.Vec.Packed where
 
+import Prelude hiding (map,foldl,foldr,zipWith)
 import Data.Vec.Base as V
+
+-- | PackedVec class : relates a packed vector type to its unpacked type For
+-- now, the fundep is not bijective -- It may be advantageous to have multiple
+-- packed representations for a canonical vector type. This may change. In the
+-- meantime, you may have to annotate return types.
+class PackedVec pv v | pv -> v  where
+  pack   :: v -> pv
+  unpack :: pv -> v
+
+{-# RULES 
+      "Vec pack/unpack" forall x.
+        pack (unpack x) = x;
+      "Vec unpack/pack" forall x.
+        unpack (pack x) = x;
+      "Vec pack.unpack" 
+        pack . unpack = id;
+      "Vec unpack.pack"
+        unpack . pack = id; #-}
 
 -- * Packed Vector Types
 data Vec2I = Vec2I {-#UNPACK#-} !Int 
@@ -93,13 +124,6 @@ unpackMat ::  (Map pv v pm m, PackedVec pv v) => pm -> m
 unpackMat = V.map unpack
 {-# INLINE unpackMat #-}
 
--- | PackedVec class : relates a packed vector type to its unpacked type For
--- now, the fundep is not bijective -- It may be advantageous to have multiple
--- packed representations for a canonical vector type. This may change. In the
--- meantime, you may have to annotate return types.
-class PackedVec pv v | pv -> v  where
-  pack   :: v -> pv
-  unpack :: pv -> v
 
 instance PackedVec Vec2I (Vec2 Int) where
   pack (x:.y:.()) = Vec2I x y 
@@ -157,5 +181,48 @@ instance PackedVec Vec4D (Vec4 Double) where
   {-# INLINE pack #-}
   {-# INLINE unpack #-}
 
+#if 1
+#define MAP_INSTANCE(S,V) \
+instance Map S S V V where map f = pack . map f . unpack
+
+MAP_INSTANCE(Int,Vec2I)
+MAP_INSTANCE(Int,Vec3I)
+MAP_INSTANCE(Int,Vec4I)
+MAP_INSTANCE(Float,Vec2F)
+MAP_INSTANCE(Float,Vec3F)
+MAP_INSTANCE(Float,Vec4F)
+MAP_INSTANCE(Double,Vec2D)
+MAP_INSTANCE(Double,Vec3D)
+MAP_INSTANCE(Double,Vec4D)
 
 
+#define FOLD_INSTANCE(S,V)        \
+instance Fold S V where           \
+  fold  f   = fold  f   . unpack; \
+  foldl f z = foldl f z . unpack; \
+  foldr f z = foldr f z . unpack;
+
+FOLD_INSTANCE(Int,Vec2I)
+FOLD_INSTANCE(Int,Vec3I)
+FOLD_INSTANCE(Int,Vec4I)
+FOLD_INSTANCE(Float,Vec2F)
+FOLD_INSTANCE(Float,Vec3F)
+FOLD_INSTANCE(Float,Vec4F)
+FOLD_INSTANCE(Double,Vec2D)
+FOLD_INSTANCE(Double,Vec3D)
+FOLD_INSTANCE(Double,Vec4D)
+
+#define ZIPWITH_INSTANCE(S,V) \
+instance ZipWith S S S V V V where \
+  zipWith f u v = pack $ zipWith f (unpack u) (unpack v)
+
+ZIPWITH_INSTANCE(Int,Vec2I)
+ZIPWITH_INSTANCE(Int,Vec3I)
+ZIPWITH_INSTANCE(Int,Vec4I)
+ZIPWITH_INSTANCE(Float,Vec2F)
+ZIPWITH_INSTANCE(Float,Vec3F)
+ZIPWITH_INSTANCE(Float,Vec4F)
+ZIPWITH_INSTANCE(Double,Vec2D)
+ZIPWITH_INSTANCE(Double,Vec3D)
+ZIPWITH_INSTANCE(Double,Vec4D)
+#endif
