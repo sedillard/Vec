@@ -22,8 +22,8 @@
 -- most others are recursive, and so you'll still need to use pack/unpack with
 -- these. This goes for @'multmm'@ as well because it uses @'transpose'@, and
 -- @'multmv'@ does not need its arguments to be unpacked, but the result will
--- be a polymorphic vector (:.) so you will want to pack it again. This is all
--- very experimental and likely to change.
+-- be a polymorphic vector of type @(:.)@, so you will want to pack it again.
+-- This is all very experimental and likely to change.
 
 module Data.Vec.Packed where
 
@@ -96,7 +96,7 @@ data Vec4D = Vec4D {-#UNPACK#-} !Double
                    {-#UNPACK#-} !Double
                    deriving (Eq,Ord,Show,Read)
 
--- * Packed Matrix Types. 
+-- * Packed Matrix Types
 type Mat22I = Vec2 Vec2I 
 type Mat23I = Vec2 Vec3I 
 type Mat33I = Vec3 Vec3I 
