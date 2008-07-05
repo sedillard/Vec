@@ -15,20 +15,22 @@
 -- these types, bracketed by @'pack'@ and @'unpack'@, then things unfold into
 -- neatly optimized code. 
 -- 
--- Storable, Num, Fractional, Fold, Map, and ZipWith instances are provided
--- for packed vectors, so some operations do not require pack/unpack. For
--- example, @'dot'@ does not require pack/unpack because it is defined in
--- terms of @'zipWith'@ and @'fold'@. However @'transpose'@, @'det'@ and
--- @'gaussElim'@ and most others are recursive, and so you'll still need to
--- use pack/unpack with these. This goes for @'multmm'@ as well because it
--- uses @'transpose'@, and @'multmv'@ does not need its arguments to be
--- unpacked, but the result will be a polymorphic vector (:.) so you will want
--- to pack it again. This is all very experimental and likely to change.
+-- Storable, Num, Fractional, Fold, Map, and ZipWith instances are provided for
+-- packed vectors, so some operations do not require pack/unpack. For example,
+-- @'dot'@ does not require pack/unpack because it is defined in terms of
+-- @'zipWith'@ and @'fold'@. However @'transpose'@, @'det'@, @'gaussElim'@ and
+-- most others are recursive, and so you'll still need to use pack/unpack with
+-- these. This goes for @'multmm'@ as well because it uses @'transpose'@, and
+-- @'multmv'@ does not need its arguments to be unpacked, but the result will
+-- be a polymorphic vector (:.) so you will want to pack it again. This is all
+-- very experimental and likely to change.
 
 module Data.Vec.Packed where
 
 import Prelude hiding (map,foldl,foldr,zipWith)
 import Data.Vec.Base as V
+import Data.Vec.Instances
+import Foreign
 
 -- | PackedVec class : relates a packed vector type to its unpacked type For
 -- now, the fundep is not bijective -- It may be advantageous to have multiple
@@ -181,7 +183,6 @@ instance PackedVec Vec4D (Vec4 Double) where
   {-# INLINE pack #-}
   {-# INLINE unpack #-}
 
-#if 1
 #define MAP_INSTANCE(S,V) \
 instance Map S S V V where map f = pack . map f . unpack
 
@@ -225,4 +226,59 @@ ZIPWITH_INSTANCE(Float,Vec4F)
 ZIPWITH_INSTANCE(Double,Vec2D)
 ZIPWITH_INSTANCE(Double,Vec3D)
 ZIPWITH_INSTANCE(Double,Vec4D)
-#endif
+
+
+#define NUM_INSTANCE(V)                 \
+instance Num V where                    \
+  u + v  = pack $ unpack u + unpack v ; \
+  u - v  = pack $ unpack u + unpack v ; \
+  u * v  = pack $ unpack u * unpack v ; \
+  abs    = pack . abs . unpack    ;     \
+  signum = pack . signum . unpack ;     \
+  fromInteger = pack . fromInteger
+
+NUM_INSTANCE(Vec2I)
+NUM_INSTANCE(Vec3I)
+NUM_INSTANCE(Vec4I)
+NUM_INSTANCE(Vec2F)
+NUM_INSTANCE(Vec3F)
+NUM_INSTANCE(Vec4F)
+NUM_INSTANCE(Vec2D)
+NUM_INSTANCE(Vec3D)
+NUM_INSTANCE(Vec4D)
+
+#define FRACTIONAL_INSTANCE(V)        \
+instance Fractional V where           \
+  u / v = pack $ unpack u / unpack v ;\
+  recip = pack . recip . unpack      ;\
+  fromRational = pack . fromRational
+
+FRACTIONAL_INSTANCE(Vec2F)
+FRACTIONAL_INSTANCE(Vec3F)
+FRACTIONAL_INSTANCE(Vec4F)
+FRACTIONAL_INSTANCE(Vec2D)
+FRACTIONAL_INSTANCE(Vec3D)
+FRACTIONAL_INSTANCE(Vec4D)
+
+
+#define STORABLE_INSTANCE(V,PV)                                  \
+instance Storable PV where                                       \
+  sizeOf = sizeOf.unpack                                        ;\
+  alignment = alignment.unpack                                  ;\
+  peek p = peek (castPtr p) >>= return.pack                     ;\
+  poke p v = poke (castPtr p) (unpack v)                        ;\
+  peekElemOff p i   = peekElemOff (castPtr p) i >>= return.pack ;\
+  pokeElemOff p i v = pokeElemOff (castPtr p) i (unpack v)      ;\
+  peekByteOff p b   = peekByteOff (castPtr p) b >>= return.pack ;\
+  pokeByteOff p b v = pokeByteOff (castPtr p) b (unpack v)      ;\
+
+STORABLE_INSTANCE(Vec2 Int,Vec2I)
+STORABLE_INSTANCE(Vec3 Int,Vec3I)
+STORABLE_INSTANCE(Vec4 Int,Vec4I)
+STORABLE_INSTANCE(Vec2 Float,Vec2F)
+STORABLE_INSTANCE(Vec3 Float,Vec3F)
+STORABLE_INSTANCE(Vec4 Float,Vec4F)
+STORABLE_INSTANCE(Vec2 Double,Vec2D)
+STORABLE_INSTANCE(Vec3 Double,Vec3D)
+STORABLE_INSTANCE(Vec4 Double,Vec4D)
+

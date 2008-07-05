@@ -19,7 +19,6 @@ module Data.Vec.Instances where
 import Prelude hiding (map,foldl,foldr,zipWith)
 import Data.Vec.Base as V
 import Data.Vec.Nat
-import Data.Vec.Packed
 import Foreign.Storable
 import Foreign.Ptr
 
@@ -119,61 +118,3 @@ instance
     {-# INLINE recip #-}
     {-# INLINE fromRational #-}
 
-#if 1
-
-
-#define NUM_INSTANCE(V)                 \
-instance Num V where                    \
-  u + v  = pack $ unpack u + unpack v ; \
-  u - v  = pack $ unpack u + unpack v ; \
-  u * v  = pack $ unpack u * unpack v ; \
-  abs    = pack . abs . unpack    ;     \
-  signum = pack . signum . unpack ;     \
-  fromInteger = pack . fromInteger
-
-NUM_INSTANCE(Vec2I)
-NUM_INSTANCE(Vec3I)
-NUM_INSTANCE(Vec4I)
-NUM_INSTANCE(Vec2F)
-NUM_INSTANCE(Vec3F)
-NUM_INSTANCE(Vec4F)
-NUM_INSTANCE(Vec2D)
-NUM_INSTANCE(Vec3D)
-NUM_INSTANCE(Vec4D)
-
-#define FRACTIONAL_INSTANCE(V)        \
-instance Fractional V where           \
-  u / v = pack $ unpack u / unpack v ;\
-  recip = pack . recip . unpack      ;\
-  fromRational = pack . fromRational
-
-FRACTIONAL_INSTANCE(Vec2F)
-FRACTIONAL_INSTANCE(Vec3F)
-FRACTIONAL_INSTANCE(Vec4F)
-FRACTIONAL_INSTANCE(Vec2D)
-FRACTIONAL_INSTANCE(Vec3D)
-FRACTIONAL_INSTANCE(Vec4D)
-
-
-#define STORABLE_INSTANCE(V,PV)                                  \
-instance Storable PV where                                       \
-  sizeOf = sizeOf.unpack                                        ;\
-  alignment = alignment.unpack                                  ;\
-  peek p = peek (castPtr p) >>= return.pack                     ;\
-  poke p v = poke (castPtr p) (unpack v)                        ;\
-  peekElemOff p i   = peekElemOff (castPtr p) i >>= return.pack ;\
-  pokeElemOff p i v = pokeElemOff (castPtr p) i (unpack v)      ;\
-  peekByteOff p b   = peekByteOff (castPtr p) b >>= return.pack ;\
-  pokeByteOff p b v = pokeByteOff (castPtr p) b (unpack v)      ;\
-
-STORABLE_INSTANCE(Vec2 Int,Vec2I)
-STORABLE_INSTANCE(Vec3 Int,Vec3I)
-STORABLE_INSTANCE(Vec4 Int,Vec4I)
-STORABLE_INSTANCE(Vec2 Float,Vec2F)
-STORABLE_INSTANCE(Vec3 Float,Vec3F)
-STORABLE_INSTANCE(Vec4 Float,Vec4F)
-STORABLE_INSTANCE(Vec2 Double,Vec2D)
-STORABLE_INSTANCE(Vec3 Double,Vec3D)
-STORABLE_INSTANCE(Vec4 Double,Vec4D)
-
-#endif
