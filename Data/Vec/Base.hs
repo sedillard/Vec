@@ -247,10 +247,14 @@ instance Fold a (a':.u) => Fold a (a:.a':.u) where
   {-# INLINE foldr #-}
 
 -- | Reverse a vector 
+reverse ::  (Reverse' () v v') => v -> v'
 reverse v = reverse' () v
 {-# INLINE reverse #-}
 
--- Reverse helper function : builds the reversed list as its first argument
+-- really the type of reverse should b v->v but somehow this makes inference easier
+
+
+-- | Reverse helper function : accumulates the reversed list in its first argument
 class Reverse' p v v' | p v -> v' where
   reverse' :: p -> v -> v'
   
