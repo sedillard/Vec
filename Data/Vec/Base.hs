@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-{-# OPTIONS_HADDOCK prune #-}
+{-# HADDOCK_OPTIONS prune #-}
 
 module Data.Vec.Base where
 
