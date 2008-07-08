@@ -231,7 +231,7 @@ ZIPWITH_INSTANCE(Double,Vec4D)
 #define NUM_INSTANCE(V)                 \
 instance Num V where                    \
   u + v  = pack $ unpack u + unpack v ; \
-  u - v  = pack $ unpack u + unpack v ; \
+  u - v  = pack $ unpack u - unpack v ; \
   u * v  = pack $ unpack u * unpack v ; \
   abs    = pack . abs . unpack    ;     \
   signum = pack . signum . unpack ;     \
