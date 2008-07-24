@@ -19,7 +19,7 @@ Build-type:          Simple
 Category:            Data,Math
 
 library
-    Build-Depends:      base
+    Build-Depends:      base,QuickCheck
 
     Exposed-modules:    Data.Vec 
                         Data.Vec.Base,

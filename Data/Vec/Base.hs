@@ -21,7 +21,7 @@ import Data.Vec.Nat
 
 import Prelude hiding (map,zipWith,foldl,foldr,reverse,
                        take,drop,head,tail,sum,last,product,
-                       minimum,maximum)
+                       minimum,maximum,length)
 import qualified Prelude as P
 
 
@@ -342,6 +342,17 @@ instance Snoc () a (a:.()) where
 instance Snoc v a (a:.v) => Snoc (a:.v) a (a:.a:.v) where
   snoc (b:.v) a = b:.(snoc v a)
   {-# INLINE snoc #-}
+
+
+
+class Length v n | v -> n where
+  length :: v -> Int
+
+instance Length () N0 where
+  length _ = 0
+
+instance (Length v n) => Length (a:.v) (Succ n) where
+  length (_:.v) = 1+length v
 
 
 

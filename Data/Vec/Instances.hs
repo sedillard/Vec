@@ -21,6 +21,7 @@ import Data.Vec.Base as V
 import Data.Vec.Nat
 import Foreign.Storable
 import Foreign.Ptr
+import Test.QuickCheck
 
 -- Storable instances. 
 
@@ -118,3 +119,15 @@ instance
     {-# INLINE recip #-}
     {-# INLINE fromRational #-}
 
+
+
+-- Arbitrary instances
+
+instance Arbitrary a => Arbitrary (a:.()) where
+  arbitrary = arbitrary >>= return . (:.())
+  coarbitrary (a:._) = variant 0 . coarbitrary a
+
+instance (Length v n, Arbitrary a, Arbitrary v) => Arbitrary (a:.v) where
+  arbitrary = arbitrary >>= \a -> 
+              arbitrary >>= \v -> return (a:.v);
+  coarbitrary (a:.v) = variant (V.length v) . coarbitrary a . coarbitrary v
