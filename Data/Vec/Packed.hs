@@ -257,38 +257,47 @@ instance (Arbitrary v, PackedVec v) => Arbitrary (Packed v)
   coarbitrary v = coarbitrary (unpack v)
 
 
+
 instance (Length v n, PackedVec v) => Length (Packed v) n
   where
   length v = length (unpack v)
+  {-# INLINE length #-}
 
 instance (Head v h, PackedVec v) => Head (Packed v) h
   where
   head v = head (unpack v)
+  {-# INLINE head #-}
 
 instance (Tail v t, PackedVec v, PackedVec t) => Tail (Packed v) (Packed t)
   where 
   tail v = pack (tail (unpack v))
+  {-# INLINE tail #-}
 
 instance (Last v l, PackedVec v) => Last (Packed v) l
   where
   last v = last (unpack v)
+  {-# INLINE last #-}
 
 instance (Snoc v a v', PackedVec v, PackedVec v') 
           => Snoc (Packed v) a (Packed v')
   where
   snoc v a = pack (snoc (unpack v) a)
+  {-# INLINE snoc #-}
 
 instance (Reverse' () v v', PackedVec v, PackedVec v') 
           => Reverse' () (Packed v) (Packed v')
   where
   reverse' _ v = pack (reverse (unpack v))
+  {-# INLINE reverse' #-}
 
 instance (Take (Succ n) v v', PackedVec v, PackedVec v') 
           => Take (Succ n) (Packed v) (Packed v')
   where
   take n v = pack (take n (unpack v))
+  {-# INLINE take #-}
 
 instance (Drop n v v', PackedVec v, PackedVec v') 
           => Drop n (Packed v) (Packed v')
   where
   drop n v = pack (drop n (unpack v))
+  {-# INLINE drop #-}
