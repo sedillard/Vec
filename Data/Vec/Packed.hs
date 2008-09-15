@@ -39,8 +39,8 @@
 -- arguments to be unpacked, but the result is a polymorphic vector @(:.)@, so
 -- you will need to pack it again. I admit that this is awkward. 
 --
--- There are also instances for 'Take', 'Drop', 'Last', 'Head', 'Tail' and
--- 'Snoc'. These come in handy for thinks like quaternions and homogenous
+-- There are also instances for 'Access', 'Take', 'Drop', 'Last', 'Head', 'Tail' and
+-- 'Snoc'. These come in handy for things like quaternions and homogenous
 -- coordinates.
 
 module Data.Vec.Packed where
@@ -301,3 +301,10 @@ instance (Drop n v v', PackedVec v, PackedVec v')
   where
   drop n v = pack (drop n (unpack v))
   {-# INLINE drop #-}
+
+instance (Access n a v, PackedVec v) => Access n a (Packed v)
+  where
+  get n v = get n (unpack v)
+  set n a v = pack (set n a (unpack v))
+  {-# INLINE get #-}
+  {-# INLINE set #-}
