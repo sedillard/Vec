@@ -20,8 +20,8 @@
 -- list cells or unnecessary heap allocations.
 --
 -- Packed vectors are related to their unpacked representations by way of an
--- associated type. An instance of class @'PackedVec' v@ declares that @v@ has a
--- packed representation, and the type of that is @'Packed' v@. The packed
+-- associated type. An instance of class @'PackedVec' v@ declares that @v@ has
+-- a packed representation, and the type of that is @'Packed' v@. The packed
 -- constructors are named @Vec@/NT/ where /N/ is 2, 3 or 4 and /T/ is @I@, @F@
 -- or @D@ for @Int@, @Float@ or @Double@. So the expression @Vec3D x y z@
 -- constructs a packed 3-vector of Doubles, the type of which is @Packed (Vec3
@@ -29,20 +29,26 @@
 -- i.e., @type Vec3D = Packed (Vec3 Double)@, so the packed type acts as if it
 -- had been declared @data Vec3D = Vec3D x y z@.
 -- 
--- Storable, Num, Fractional, Fold, Map, and ZipWith instances are provided
--- for packed vectors, so some operations do not require pack/unpack. For
--- example, @'dot'@ does not require pack/unpack because it is defined in
+-- 'Storable', 'Num', 'Fractional', 'Fold', 'Map', and 'ZipWith' instances are
+-- provided for packed vectors, so some operations do not require pack/unpack.
+-- For example, @'dot'@ does not require pack/unpack because it is defined in
 -- terms of @'zipWith'@ and @'fold'@. However @'transpose'@, @'det'@,
 -- @'gaussElim'@ and most others are recursive, and so you'll still need to
 -- use pack/unpack with these. This goes for @'multmm'@ as well because it
 -- uses @'transpose'@. Some functions, like @'multmv'@, do not need their
 -- arguments to be unpacked, but the result is a polymorphic vector @(:.)@, so
 -- you will need to pack it again. I admit that this is awkward. 
+--
+-- There are also instances for 'Take', 'Drop', 'Last', 'Head', 'Tail' and
+-- 'Snoc'. These come in handy for thinks like quaternions and homogenous
+-- coordinates.
 
 module Data.Vec.Packed where
 
-import Prelude hiding (map,foldl,foldr,zipWith)
+import Prelude hiding (map,foldl,foldr,zipWith,length,head,tail,last,
+                       reverse,take,drop)
 import Data.Vec.Base as V
+import Data.Vec.Nat
 import Data.Vec.LinAlg --just for haddock
 import Data.Vec.Instances
 import Data.Word
@@ -159,10 +165,12 @@ type Mat44D = Vec4 (Vec4D)
 
 
 -- | Construct a semi-packed matrix, one whose rows are packed.
-packMat ::  (Map a (Packed a) u v, PackedVec a) => u -> v
+packMat ::  (Map row (Packed row) mat packedMat, PackedVec row) 
+             => mat -> packedMat
 packMat = map pack
 
-unpackMat ::  (Map (Packed v) v u v1, PackedVec v) => u -> v1
+unpackMat ::  (Map (Packed row) row packedMat mat, PackedVec row) 
+             => packedMat -> mat
 unpackMat = map unpack
 
 instance (Eq v, PackedVec v) => Eq (Packed v) where
@@ -248,4 +256,39 @@ instance (Arbitrary v, PackedVec v) => Arbitrary (Packed v)
   arbitrary = arbitrary >>= return . pack
   coarbitrary v = coarbitrary (unpack v)
 
-  
+
+instance (Length v n, PackedVec v) => Length (Packed v) n
+  where
+  length v = length (unpack v)
+
+instance (Head v h, PackedVec v) => Head (Packed v) h
+  where
+  head v = head (unpack v)
+
+instance (Tail v t, PackedVec v, PackedVec t) => Tail (Packed v) (Packed t)
+  where 
+  tail v = pack (tail (unpack v))
+
+instance (Last v l, PackedVec v) => Last (Packed v) l
+  where
+  last v = last (unpack v)
+
+instance (Snoc v a v', PackedVec v, PackedVec v') 
+          => Snoc (Packed v) a (Packed v')
+  where
+  snoc v a = pack (snoc (unpack v) a)
+
+instance (Reverse' () v v', PackedVec v, PackedVec v') 
+          => Reverse' () (Packed v) (Packed v')
+  where
+  reverse' _ v = pack (reverse (unpack v))
+
+instance (Take (Succ n) v v', PackedVec v, PackedVec v') 
+          => Take (Succ n) (Packed v) (Packed v')
+  where
+  take n v = pack (take n (unpack v))
+
+instance (Drop n v v', PackedVec v, PackedVec v') 
+          => Drop n (Packed v) (Packed v')
+  where
+  drop n v = pack (drop n (unpack v))

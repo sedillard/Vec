@@ -290,14 +290,15 @@ instance (Append (a':.v1) v2 v3) => Append (a:.a':.v1) v2 (a:.v3) where
 -- type-level natural. For example @take n3 v@ makes a 3-vector of the first
 -- three elements of @v@.
 
-class Take n v v' | n v -> v', n v' -> v where
+class Take n v v' | n v -> v' where
   take :: n -> v -> v'
 
 instance Take N0 v () where
   take _ _ = ()
   {-# INLINE take #-}
 
-instance Take n v v' => Take (Succ n) (a:.v) (a:.v') where
+instance Take n v v' 
+         => Take (Succ n) (a:.v) (a:.v') where
   take _ (a:.v) = a:.(take (undefined::n) v)
   {-# INLINE take #-}
 
@@ -305,15 +306,16 @@ instance Take n v v' => Take (Succ n) (a:.v) (a:.v') where
 -- | @drop n v@ strips the first @n@ elements from @v@. @n@ is a type-level
 -- natural. For example @drop n2 v@ drops the first two elements.
 
-class Drop n v v' | n v -> v', n v' -> v where
+class Drop n v v' | n v -> v' where
   drop :: n -> v -> v'
  
 instance Drop N0 v v where
   drop _ = id
   {-# INLINE drop #-}
 
-instance (Tail v' v'', Drop n v v') => Drop (Succ n) v v'' where
-  drop _ = tail . drop (undefined::n)
+instance (Drop n (a:.v) v') 
+          => Drop (Succ n) (a:.a:.v) v' where
+  drop _ (a:.v) = drop (undefined::n) v
   {-# INLINE drop #-}
 
 
@@ -330,9 +332,9 @@ instance Last (a':.v) a => Last (a:.a':.v) a where
   last (a:.v) = last v
   {-# INLINE last #-}
 
--- | @snoc v a@ appends the element a to the end of v. 
 
-class Snoc v a v' | v a -> v', v' -> v a where 
+-- | @snoc v a@ appends the element a to the end of v. 
+class Snoc v a v' | v a -> v', v' -> v a, v -> a where 
   snoc :: v -> a -> v'
 
 instance Snoc () a (a:.()) where
@@ -344,7 +346,7 @@ instance Snoc v a (a:.v) => Snoc (a:.v) a (a:.a:.v) where
   {-# INLINE snoc #-}
 
 
-
+-- | The length of a vector
 class Length v n | v -> n where
   length :: v -> Int
 
@@ -353,7 +355,6 @@ instance Length () N0 where
 
 instance (Length v n) => Length (a:.v) (Succ n) where
   length (_:.v) = 1+length v
-
 
 
 -- | sum of vector elements
