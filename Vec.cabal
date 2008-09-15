@@ -1,5 +1,5 @@
 Name:                Vec
-Version:             0.9.1
+Version:             0.9.2
 License:             BSD3
 License-file:        LICENSE
 Author:              Scott E. Dillard
@@ -39,4 +39,5 @@ library
                         ScopedTypeVariables,
                         TypeOperators, 
                         TypeSynonymInstances,
+                        TypeFamilies,
                         UndecidableInstances

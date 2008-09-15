@@ -1,7 +1,6 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 {-# OPTIONS -cpp #-}
 
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -28,12 +27,12 @@ import Test.QuickCheck
 instance Storable a => Storable (a:.()) where
   sizeOf _ = sizeOf (undefined::a)
   alignment _ = alignment (undefined::a)
-  peek !p = peek (castPtr p) >>= \a -> return (a:.())
-  peekByteOff !p !o = peek (p`plusPtr`o)
-  peekElemOff !p !i = peek (p`plusPtr`(i*sizeOf(undefined::a)))
-  poke !p (a:._) = poke (castPtr p) a
-  pokeByteOff !p !o !x = poke (p`plusPtr`o) x
-  pokeElemOff !p !i !x = poke (p`plusPtr`(i*sizeOf(undefined::a))) x
+  peek p = peek (castPtr p) >>= \a -> return (a:.())
+  peekByteOff p o = peek (p`plusPtr`o)
+  peekElemOff p i = peek (p`plusPtr`(i*sizeOf(undefined::a)))
+  poke p (a:._) = poke (castPtr p) a
+  pokeByteOff p o x = poke (p`plusPtr`o) x
+  pokeElemOff p i x = poke (p`plusPtr`(i*sizeOf(undefined::a))) x
   {-# INLINE sizeOf #-}
   {-# INLINE alignment #-}
   {-# INLINE peek #-}
@@ -48,17 +47,17 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
   where
   sizeOf _ = sizeOf (undefined::a) + sizeOf (undefined::(a:.v))
   alignment _ = alignment (undefined::a)
-  peek !p = 
+  peek p = 
     peek (castPtr p) >>= \a -> 
     peek (castPtr (p`plusPtr`sizeOf(undefined::a))) >>= \v -> 
     return (a:.v)
-  peekByteOff !p !o = peek (p`plusPtr`o)
-  peekElemOff !p !i = peek (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v))))
-  poke !p (a:.v) = 
+  peekByteOff p o = peek (p`plusPtr`o)
+  peekElemOff p i = peek (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v))))
+  poke p (a:.v) = 
     poke (castPtr p) a >> 
     poke (castPtr (p`plusPtr`sizeOf(undefined::a))) v
-  pokeByteOff !p !o !x = poke (p`plusPtr`o) x
-  pokeElemOff !p !i !x = poke (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v)))) x
+  pokeByteOff p o x = poke (p`plusPtr`o) x
+  pokeElemOff p i x = poke (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v)))) x
   {-# INLINE sizeOf #-}
   {-# INLINE alignment #-}
   {-# INLINE peek #-}
@@ -72,11 +71,9 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 -- Num and Fractional instances : All arithmetic is done component-wise and
 -- literals construct uniform vectors and matrices. 
 --
--- The rule is simple : 
+-- The rule is : 
 --    If the method is unary, it's a map.  
 --    If it's binary, it's a zipWith.
---
--- You are free to ignore these instances if the definition of (*) offends you.
 
 instance
     (Eq (a:.u)
@@ -127,7 +124,9 @@ instance Arbitrary a => Arbitrary (a:.()) where
   arbitrary = arbitrary >>= return . (:.())
   coarbitrary (a:._) = variant 0 . coarbitrary a
 
-instance (Length v n, Arbitrary a, Arbitrary v) => Arbitrary (a:.v) where
+instance (Length (a:.v) (Succ n), Arbitrary a', Arbitrary (a:.v)) => Arbitrary (a':.a:.v) where
   arbitrary = arbitrary >>= \a -> 
               arbitrary >>= \v -> return (a:.v);
   coarbitrary (a:.v) = variant (V.length v) . coarbitrary a . coarbitrary v
+
+  

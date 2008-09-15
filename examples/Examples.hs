@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
+module Main where
 
 import Data.Vec as V
 import Prelude hiding (head)
@@ -121,13 +122,12 @@ t17 = getElem 2 v3 --get element using Ints, with bounds checking.
 t18 = 0 :: (Num v, Vec N17 Float v) => v  
   -- 17-dimensional vector of Floats (but WHY?!)
 
-
 multmm4d :: Mat44D -> Mat44D -> Mat44D 
 multmm4d a b = packMat $ multmm (unpackMat a) (unpackMat b)
   -- this will unfold into tight code. Compile with ghc -O2 -ddump-simpl and
   -- search for multmm4d. But before you do that, comment out the 
   -- remainder of this program. It generates absurd amounts of core.
-
+  -- (update: this needs more unfolding)
 
 
 
@@ -160,5 +160,3 @@ main = invertMany =<< return . read . P.head =<< getArgs
 --
 -- Simpler functions, like det, multmv, multmm, don't need
 -- nearly as much optimization.  -O2 handles them just fine.
-
-
