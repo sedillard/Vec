@@ -135,7 +135,7 @@ instance VecList a (a':.v) => VecList a (a:.(a':.v)) where
     | otherwise = getElem (i-1) v
   setElem !i a' (a :. v)
     | i == 0    = a' :. v
-    | otherwise = a :. (setElem (i-1) a v)
+    | otherwise = a :. (setElem (i-1) a' v)
   {-# INLINE setElem #-}
   {-# INLINE getElem #-}
   {-# INLINE fromList #-}
