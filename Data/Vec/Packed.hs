@@ -308,3 +308,12 @@ instance (Access n a v, PackedVec v) => Access n a (Packed v)
   set n a v = pack (set n a (unpack v))
   {-# INLINE get #-}
   {-# INLINE set #-}
+
+instance (VecList a v, PackedVec v) => VecList a (Packed v)
+  where
+  fromList    = pack . fromList
+  getElem i   = getElem i . unpack
+  setElem i a = pack . setElem i a . unpack
+  {-# INLINE setElem #-}
+  {-# INLINE getElem #-}
+  {-# INLINE fromList #-}

@@ -85,6 +85,26 @@ class Vec n a v | n a -> v, v -> n a where
   -- Use `vec` when the length can be inferred.
   mkVec :: n -> a -> v
 
+
+instance Vec N1 a ( a :. () ) where
+  mkVec _ a = a :. ()
+  {-# INLINE mkVec #-}
+
+instance Vec (Succ n) a (a':.v) => Vec (Succ (Succ n)) a (a:.a':.v) where
+  mkVec _ a = a :. (mkVec undefined a)
+  {-# INLINE mkVec #-}
+
+
+-- | Make a uniform vector. The length is inferred.
+vec ::  (Vec n a v) => a -> v
+vec = mkVec undefined
+{-# INLINE vec #-}
+
+
+-- | Build a vector from a list, or access vector elements using run-time
+-- indicies, numbered from 0.
+
+class VecList a v | v -> a where
   -- | turn a list into a vector of inferred length
   fromList :: [a] -> v
 
@@ -94,11 +114,10 @@ class Vec n a v | n a -> v, v -> n a where
   -- | set a vector element, which one is determined at runtime
   setElem :: Int -> a -> v -> v
 
-instance Vec N1 a ( a :. () ) where
-  mkVec _ a = a :. ()
+instance VecList a (a:.()) where
   fromList (a:_)   = a :. ()
   fromList []      = error "fromList: list too short"
-  getElem !i (a :. _) 
+  getElem !i (a :. _)
     | i == 0    = a
     | otherwise = error "getElem: index out of bounds"
   setElem !i a _ 
@@ -106,35 +125,24 @@ instance Vec N1 a ( a :. () ) where
     | otherwise = error "setElem: index out of bounds"
   {-# INLINE setElem #-}
   {-# INLINE getElem #-}
-  {-# INLINE mkVec #-}
   {-# INLINE fromList #-}
 
-instance Vec (Succ n) a (a':.v) => Vec (Succ (Succ n)) a (a:.a':.v) where
-  mkVec _ a = a :. (mkVec undefined a)
-  fromList (a:as)  = a :. (fromList as)
+instance VecList a (a':.v) => VecList a (a:.(a':.v)) where
+  fromList (a:as)  = a :. fromList as
   fromList []      = error "fromList: list too short"
   getElem !i (a :. v)
     | i == 0    = a
     | otherwise = getElem (i-1) v
-  setElem !i a (x :. v)
-    | i == 0    = a :. v
-    | otherwise = x :. (setElem (i-1) a v)
+  setElem !i a' (a :. v)
+    | i == 0    = a' :. v
+    | otherwise = a :. (setElem (i-1) a v)
   {-# INLINE setElem #-}
   {-# INLINE getElem #-}
-  {-# INLINE mkVec #-}
   {-# INLINE fromList #-}
-
-
--- | Make a uniform vector. The length is inferred.
-vec ::  (Vec n a v) => a -> v
-vec = mkVec undefined
-{-# INLINE vec #-}
-
 
 -- | get or set a vector element, known at compile
 --time. Use the Nat types to access vector components. For instance, @get n0@
 --gets the x component, @set n2 44@ sets the z component to 44. 
-
 
 class Access n a v | v -> a where
   get  :: n -> v -> a
@@ -418,12 +426,12 @@ matToList    = concat . matToLists
 {-# INLINE matToList    #-}
 
 -- | convert a list-of-lists into a matrix
-matFromLists :: (Vec j a v, Vec i v m) => [[a]] -> m
+matFromLists :: (Vec j a v, Vec i v m, VecList a v, VecList v m) => [[a]] -> m
 matFromLists = fromList . (P.map fromList)
 {-# INLINE matFromLists #-}
 
 -- | convert a list into a matrix. (row-major order)
-matFromList :: forall i j v m a. (Vec i v m, Vec j a v, Nat i) => [a] -> m
+matFromList :: forall i j v m a. (Vec i v m, Vec j a v, Nat i, VecList a v, VecList v m) => [a] -> m
 matFromList  = matFromLists . groupsOf (nat(undefined::i))
   where groupsOf n xs = let (a,b) = splitAt n xs in a:(groupsOf n b)
 {-# INLINE matFromList  #-}
