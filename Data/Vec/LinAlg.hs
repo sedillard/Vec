@@ -1,17 +1,15 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE PatternSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_HADDOCK ignore-exports,prune #-}
@@ -57,6 +55,8 @@ import Data.Vec.Instances
 
 import Control.Monad
 import Data.Maybe
+
+import Unsafe.Coerce
 
 
 -- | dot / inner / scalar product
@@ -351,11 +351,11 @@ class Alternating n a v | v -> n a where
   alternating :: n -> a -> v
 
 instance Alternating N1 a (a:.()) where
-  alternating _ !a = a:.()
+  alternating _ a = a:.()
   {-# INLINE alternating #-}
 
 instance (Num a, Alternating n a (a:.v)) => Alternating (Succ n) a (a:.a:.v) where
-  alternating _ !a = a:.(alternating (undefined::n) (negate $! a))
+  alternating _ a = a:.(alternating (undefined::n) (negate a))
   {-# INLINE alternating #-}
 
 
@@ -367,7 +367,34 @@ instance Num a => Det' a ((a:.a:.()):.(a:.a:.()):.()) where
   det' ( (a:.b:.()) :. (c:.d:.()) :. () ) = a*d-b*c
   {-# INLINE det' #-}
 
---this instance is particularly ugly in order to avoid overlapping with the one above
+
+--This is the only overlapping instance in the whole library (goddamnit)
+instance
+    (Num a
+    ,Fold a v
+    ,Num v
+    ,Head m v
+    ,Vec n a v
+    ,Map m__ a vm v
+    ,Transpose vmt vm
+    ,DropConsec v vv
+    ,Map v vv m_ vmt
+    ,Tail m m_
+    ,Alternating n a v
+    ,Det' a m__
+    )
+    => Det' a m
+  where
+    det' m =
+      sum ((alternating undefined 1) * (head m) *
+           (map det' (transpose(map(dropConsec)(tail m)))))
+    {-# INLINE det' #-}
+
+--For reference, here is the non-overlapping instance that worked in 6.8. When
+--I figure out what happened between 6.8 and 6.10, hopefully we can go back to
+--a non-overlapping instance.
+
+{-
 instance
     (Num a
     ,Num (a:.a:.a:.v)
@@ -388,6 +415,8 @@ instance
       sum ((alternating undefined 1) * mh *
           (map det' (transpose (map dropConsec mt :: vmt))))
     {-# INLINE det' #-}
+-}
+
 
 
 -- For now, use wrapper class to allow type inference. I think maybe the

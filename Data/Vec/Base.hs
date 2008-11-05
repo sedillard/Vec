@@ -1,8 +1,6 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -13,7 +11,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-{-# HADDOCK_OPTIONS prune #-}
+-- {-# HADDOCK_OPTIONS prune #-}
 
 module Data.Vec.Base where
 
@@ -105,22 +103,34 @@ vec = mkVec undefined
 -- indicies, numbered from 0.
 
 class VecList a v | v -> a where
-  -- | turn a list into a vector of inferred length
+  -- | Turn a list into a vector of inferred length. The list must be at least
+  -- as long as the vector, but may be longer. Make a mental note of the
+  -- distinction between this and 'matFromList', as you might accidentally use
+  -- this when you mean that. Because number literals can be converted to
+  -- vectors, and matrices are vectors of vectors, the following works
+  -- 
+  -- > fromList [1,2,3,4] :: Mat22 Int 
+  -- > > ((1):.(1):.()):.((2):.(2):.()):.()
+  --
+  -- even though we meant to do this
+  --
+  -- > matFromList [1,2,3,4] :: Mat22 Int 
+  -- > > ((1):.(2):.()):.((3):.(4):.()):.()
   fromList :: [a] -> v
 
-  -- | get a vector element, which one is determined at runtime
+  -- | Get a vector element, which one determined at runtime.
   getElem :: Int -> v -> a
 
-  -- | set a vector element, which one is determined at runtime
+  -- | Set a vector element, which one determined at runtime
   setElem :: Int -> a -> v -> v
 
 instance VecList a (a:.()) where
   fromList (a:_)   = a :. ()
   fromList []      = error "fromList: list too short"
-  getElem !i (a :. _)
+  getElem i (a :. _)
     | i == 0    = a
     | otherwise = error "getElem: index out of bounds"
-  setElem !i a _ 
+  setElem i a _ 
     | i == 0    = a :. ()
     | otherwise = error "setElem: index out of bounds"
   {-# INLINE setElem #-}
@@ -130,10 +140,10 @@ instance VecList a (a:.()) where
 instance VecList a (a':.v) => VecList a (a:.(a':.v)) where
   fromList (a:as)  = a :. fromList as
   fromList []      = error "fromList: list too short"
-  getElem !i (a :. v)
+  getElem i (a :. v)
     | i == 0    = a
     | otherwise = getElem (i-1) v
-  setElem !i a' (a :. v)
+  setElem i a' (a :. v)
     | i == 0    = a' :. v
     | otherwise = a :. (setElem (i-1) a' v)
   {-# INLINE setElem #-}
