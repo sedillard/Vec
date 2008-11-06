@@ -146,17 +146,20 @@ invertMany n =
   b <- mallocArray n
   forM_ [0..n-1] $ \i -> pokeElemOff a i m4
   forM_ [0..n-1] $ \i -> 
-    peekElemOff a i >>= pokeElemOff b i . fst . invertAndDet
+    peekElemOff a i >>= pokeElemOff b i . fromMaybe 0 . invert
     -- invertAndDet computes inverse and determinant at same time 
     -- Storable instances also generate tight code.
   peek b >>= print
 
 main = invertMany =<< return . read . P.head =<< getArgs
 
--- A C implementation, baseline.c, is provided with the library for
--- comparison. On my 2.16ghz Intel Core Duo, baseline 1000000 runs in 3.8sec,
--- and this program, compiled as above, runs in 5.3sec. But really we should
--- just import baseline.c using the ffi. (Boring)
---
--- Simpler functions, like det, multmv, multmm, don't need
--- nearly as much optimization.  -O2 handles them just fine.
+-- A C implementation, baseline.c, is provided with the library for comparison.
+-- On my 2.16ghz Intel Core Duo, baseline 2000000 runs in 2.4sec, and this
+-- program, compiled as above with GHC 6.8.3, runs in 3.3sec. Something changed
+-- in GHC 6.10.1 (I'm not sure what) and that compiler produces a program that
+-- runs in 8.8 seconds.  Really, if your program spends most of its time
+-- inverting small matrices, you should just import baseline.c using the ffi
+-- (which is boring.)
+-- 
+-- Simpler functions, like det, multmv, multmm, don't need nearly as much
+-- optimization.  -O2 handles them just fine.

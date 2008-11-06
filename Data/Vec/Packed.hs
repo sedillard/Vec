@@ -50,7 +50,6 @@ import Prelude hiding (map,foldl,foldr,zipWith,length,head,tail,last,
 import Data.Vec.Base as V
 import Data.Vec.Nat
 import Data.Vec.LinAlg --just for haddock
-import Data.Vec.Instances
 import Data.Word
 import Data.Int
 import Foreign

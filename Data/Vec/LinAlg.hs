@@ -51,7 +51,6 @@ import Prelude hiding (map,zipWith,foldl,foldr,reverse,take,drop,
 import qualified Prelude as P
 import Data.Vec.Base
 import Data.Vec.Nat
-import Data.Vec.Instances
 
 import Control.Monad
 import Data.Maybe

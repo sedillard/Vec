@@ -132,6 +132,5 @@ import Data.Vec.Base
 import Data.Vec.LinAlg
 import Data.Vec.Packed
 import Data.Vec.Nat
-import Data.Vec.Instances
 
 
