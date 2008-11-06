@@ -191,7 +191,7 @@ instance (Map a b u v, PackedVec u, PackedVec v)
   map f = pack . map f . unpack
   {-# INLINE map #-}
 
-instance (Fold a v, PackedVec v) => Fold a (Packed v) 
+instance (Fold v a, PackedVec v) => Fold (Packed v) a
   where
   fold f = fold f . unpack
   foldl f z = foldl f z . unpack

@@ -59,23 +59,23 @@ import Unsafe.Coerce
 
 
 -- | dot / inner / scalar product
-dot ::  (Num a, Num v, Fold a v) => v -> v -> a
+dot ::  (Num a, Num v, Fold v a) => v -> v -> a
 dot u v = sum (u*v)
 {-# INLINE dot #-}
 
 -- | vector norm, squared
-normSq ::  (Num a, Num v, Fold a v) => v -> a
+normSq ::  (Num a, Num v, Fold v a) => v -> a
 normSq v = dot v v
 {-# INLINE normSq #-}
 
 -- | vector / L2 / Euclidean norm
-norm ::  (Num v, Floating a, Fold a v) => v -> a
+norm ::  (Num v, Floating a, Fold v a) => v -> a
 norm v = sqrt (dot v v)
 {-# INLINE norm #-}
 
 -- | @normalize v@ is a unit vector in the direction of @v@. @v@ is assumed
 -- non-null.
-normalize :: (Floating a, Num v, Fold a v, Map a a v v) => v -> v
+normalize :: (Floating a, Num v, Fold v a, Map a a v v) => v -> v
 normalize v = map (/(norm v)) v
 {-# INLINE normalize #-}
 
@@ -111,7 +111,7 @@ project  v = case reverse v of (w:.u) -> reverse (u/vec w)
 multvm :: 
   ( Transpose m mt
   , Map v a mt v'
-  , Fold a v
+  , Fold v a
   , Num a
   , Num v
   ) => v -> m -> v'
@@ -122,7 +122,7 @@ multvm v m = map (dot v) (transpose m)
 multmv :: 
   ( Map v a m v'
   , Num v
-  , Fold a v
+  , Fold v a
   , Num a
   ) => m -> v -> v'
 multmv m v = map (dot v) m
@@ -133,7 +133,7 @@ multmm ::
   (Map v v' m1 m3
   ,Map v a b v'
   ,Transpose m2 b
-  ,Fold a v
+  ,Fold v a
   ,Num v
   ,Num a
   ) => m1 -> m2 -> m3
@@ -370,7 +370,7 @@ instance Num a => Det' a ((a:.a:.()):.(a:.a:.()):.()) where
 --This is the only overlapping instance in the whole library (goddamnit)
 instance
     (Num a
-    ,Fold a v
+    ,Fold v a
     ,Num v
     ,Head m v
     ,Vec n a v
@@ -397,7 +397,7 @@ instance
 instance
     (Num a
     ,Num (a:.a:.a:.v)
-    ,Fold a (a:.a:.a:.v)
+    ,Fold (a:.a:.a:.v) a
     ,Alternating (Succ (Succ (Succ n))) a (a:.a:.a:.v)
     ,DropConsec (a:.a:.a:.v) vv
     ,Map (a:.a:.a:.v) vv ((a:.a:.a:.v):.(a:.a:.a:.v):.m) vmt
@@ -645,7 +645,7 @@ instance BackSubstitute ((a:.r):.()) where
 instance 
     ( Map (a:.r) r ((a:.r):.rs) rs_ --map tail
     , Map r (a:.r) rs_ ((a:.r):.rs) --map cons
-    , Fold (a,a:.r) aas
+    , Fold aas (a,a:.r) 
     , ZipWith a a a (a:.r) (a:.r) (a:.r)
     , Map a a (a:.r) (a:.r)
     , ZipWith a (a:.r) (a,a:.r) r ((a:.r):.rs) aas
@@ -677,7 +677,7 @@ instance BackSubstitute' ((a:.r):.()) where
 instance 
     ( Map (a:.r) r ((a:.r):.rs) rs_ --map tail
     , Map r (a:.r) rs_ ((a:.r):.rs) --map cons
-    , Fold (a,a:.r) aas
+    , Fold aas (a,a:.r) 
     , ZipWith a a a (a:.r) (a:.r) (a:.r)
     , Map a a (a:.r) (a:.r)
     , ZipWith a (a:.r) (a,a:.r) r ((a:.r):.rs) aas

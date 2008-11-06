@@ -243,12 +243,12 @@ instance
 
 -- | Fold a function over a vector. 
 
-class Fold a v | v -> a where
+class Fold v a | v -> a where
   fold  :: (a -> a -> a) -> v -> a
   foldl :: (b -> a -> b) -> b -> v -> b
   foldr :: (a -> b -> b) -> b -> v -> b
 
-instance Fold a (a:.()) where
+instance Fold (a:.()) a where
   fold  f   (a:._) = a 
   foldl f z (a:._) = (f $! z) $! a
   foldr f z (a:._) = (f $! a) $! z
@@ -256,7 +256,7 @@ instance Fold a (a:.()) where
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
-instance Fold a (a':.u) => Fold a (a:.a':.u) where
+instance Fold (a':.u) a => Fold (a:.a':.u) a where
   fold  f   (a:.v) = (f $! a) $! (fold f v)
   foldl f z (a:.v) = (f $! (foldl f z v)) $! a
   foldr f z (a:.v) = (f $! a) $! (foldr f z v)
@@ -376,26 +376,26 @@ instance (Length v n) => Length (a:.v) (Succ n) where
 
 
 -- | sum of vector elements
-sum ::  (Fold a v, Num a) => v -> a
+sum ::  (Fold v a, Num a) => v -> a
 sum x     = fold (+) x
 {-# INLINE sum #-}
 
 -- | product of vector elements
-product ::  (Fold a v, Num a) => v -> a
+product ::  (Fold v a, Num a) => v -> a
 product x = fold (*) x
 {-# INLINE product #-}
 
 -- | maximum vector element
-maximum ::  (Fold a v, Ord a) => v -> a
+maximum ::  (Fold v a, Ord a) => v -> a
 maximum x = fold max x
 {-# INLINE maximum #-}
 
 -- | minimum vector element
-minimum ::  (Fold a v, Ord a) => v -> a
+minimum ::  (Fold v a, Ord a) => v -> a
 minimum x = fold min x
 {-# INLINE minimum #-}
 
-toList ::  (Fold a v) => v -> [a]
+toList ::  (Fold v a) => v -> [a]
 toList = foldr (:) [] 
 {-# INLINE toList #-}
 
@@ -426,12 +426,12 @@ type Mat47 a = Vec4 (Vec7 a)
 type Mat48 a = Vec4 (Vec8 a)
 
 -- | convert a matrix to a list-of-lists
-matToLists ::  (Fold a v, Fold v m) => m -> [[a]]
+matToLists ::  (Fold v a, Fold m v) => m -> [[a]]
 matToLists   = (P.map toList) . toList
 {-# INLINE matToLists   #-}
 
 -- | convert a matrix to a list in row-major order
-matToList  ::  (Fold a v, Fold v m) => m -> [a]
+matToList  ::  (Fold v a, Fold m v) => m -> [a]
 matToList    = concat . matToLists
 {-# INLINE matToList    #-}
 
