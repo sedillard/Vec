@@ -12,12 +12,13 @@
 {-# LANGUAGE TypeSynonymInstances      #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
--- | Packed vectors : use these whenever possible. The generic vector type is
--- is represented at run-time by a linked list of boxed values. Packed types,
--- however, store the vector components sequentially in memory. Vector
--- operations can be defined using the generic types, and the compiler will
--- inline and specialize these definitions for the packed types, avoiding any
--- list cells or unnecessary heap allocations.
+-- | Packed vectors : use these whenever possible. The polymorphic vector type
+-- is represented at run-time by a linked list of boxed values. Specialized, or
+-- /packed/ types, store the vector components sequentially in memory, in a
+-- single boxed value. Definitions for vector operations, given in terms of
+-- polymorphic vectors, can be (almost) automatically propagated to packed
+-- types using the functions 'pack' and 'unpack'. The compiler can then
+-- specialize the definition to the packed type and produce efficient code.
 --
 -- Packed vectors are related to their unpacked representations by way of an
 -- associated type. An instance of class @'PackedVec' v@ declares that @v@ has
@@ -33,15 +34,17 @@
 -- provided for packed vectors, so some operations do not require pack/unpack.
 -- For example, @'dot'@ does not require pack/unpack because it is defined in
 -- terms of @'zipWith'@ and @'fold'@. However @'transpose'@, @'det'@,
--- @'gaussElim'@ and most others are recursive, and so you'll still need to
--- use pack/unpack with these. This goes for @'multmm'@ as well because it
--- uses @'transpose'@. Some functions, like @'multmv'@, do not need their
--- arguments to be unpacked, but the result is a polymorphic vector @(:.)@, so
--- you will need to pack it again. I admit that this is awkward. 
+-- @'gaussElim'@ and most others are recursive (i.e., defined in terms of the
+-- same operation on lower-dimensional vectors), and so you'll still need to
+-- use pack/unpack with these. This goes for @'multmm'@ as well because it uses
+-- @'transpose'@. Some functions, like @'multmv'@, do not need their arguments
+-- to be unpacked, but the result is a polymorphic vector @(:.)@, so you will
+-- need to pack it again. I admit that this is awkward, and I'm still looking
+-- for a better way.
 --
--- There are also instances for 'Access', 'Take', 'Drop', 'Last', 'Head', 'Tail' and
--- 'Snoc'. These come in handy for things like quaternions and homogenous
--- coordinates.
+-- There are also instances for 'Access', 'Take', 'Drop', 'Last', 'Head',
+-- 'Tail' and 'Snoc'. These come in handy for things like quaternions and
+-- homogenous coordinates.
 
 module Data.Vec.Packed where
 
@@ -63,6 +66,8 @@ class PackedVec v where
   pack   :: v -> Packed v
   unpack :: Packed v -> v
 
+
+--who knows if this even does anything
 {-# RULES 
       "Vec pack/unpack" forall x.
         pack (unpack x) = x; 

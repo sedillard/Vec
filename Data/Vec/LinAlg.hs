@@ -9,8 +9,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 {-# OPTIONS_HADDOCK ignore-exports,prune #-}
 
@@ -58,7 +58,7 @@ import Data.Maybe
 import Unsafe.Coerce
 
 
--- | dot / inner / scalar product
+-- | dot \/ inner \/ scalar product
 dot ::  (Num a, Num v, Fold v a) => v -> v -> a
 dot u v = sum (u*v)
 {-# INLINE dot #-}
@@ -68,7 +68,7 @@ normSq ::  (Num a, Num v, Fold v a) => v -> a
 normSq v = dot v v
 {-# INLINE normSq #-}
 
--- | vector / L2 / Euclidean norm
+-- | vector \/ L2 \/ Euclidean norm
 norm ::  (Num v, Floating a, Fold v a) => v -> a
 norm v = sqrt (dot v v)
 {-# INLINE norm #-}
@@ -81,7 +81,7 @@ normalize v = map (/(norm v)) v
 
 -- | 3d cross product.
 cross :: Num a => Vec3 a -> Vec3 a -> Vec3 a
-cross (ux:.uy:.uz:.()) (vx:.vy:.vz:.()) =
+cross (ux:.uy:.uz:._) (vx:.vy:.vz:._) =
   (uy*vz-uz*vy):.(uz*vx-ux*vz):.(ux*vy-uy*vx):.()
 {-# INLINE cross #-}
 
@@ -307,9 +307,59 @@ identity = diagonal 1
 {-# INLINE identity #-}
 
 
--- DropConsec: this is a helper function for computing determinants. Given an
--- n-vector v, drop each element from v and collect the remaning (n-1)-vectors
--- into an n-vector (ie an n-by-(n-1) matrix)
+
+
+
+
+-- Det' needs help inferring that all of the matrix elements are the same type.
+
+-- | Determinant by minor expansion, i.e. Laplace's formula. Unfolds into a
+-- closed form expression.  This should be the fastest way for 4x4 and smaller,
+-- but @snd . gaussElim@ works too.
+
+det :: forall n a r m. (Vec n a r, Vec n r m, Det' m a) => m -> a
+det = det'
+{-# INLINE det #-}
+
+
+
+-- The Determinant of a square matrix, by minor expansion. 
+class Det' m a | m -> a where
+  det' :: m -> a
+
+
+instance Det' ((a:.()):.()) a where
+  det' ((a:._):._) = a
+
+
+
+instance 
+  ( (a:.a:.v) ~ r                  -- a row of the matrix, an n-vector
+  , ((a:.a:.v):.(a:.a:.v):.vs) ~ m -- an n*n matrix, n >= 2
+  , ((a:.v):.(a:.v):.vs_) ~ m_     -- an n*(n-1) matrix
+  , (((a:.v):.vs_):.(x:.y)) ~ mm   -- an n-vector of (n-1)*(n-1) matrices to recurse upon
+  , Map (a:.a:.v) (a:.v) m m_      -- drop the first column of m to get m_
+  , DropConsec m_ mm               -- an n-vector of (n-1)*(n-1) matrices
+  , Det' ((a:.v):.vs_) a           -- determinant of (n-1)*(n-1) matrix
+  , Map ((a:.v):.vs_) a mm r       -- dets of all n of the (n-1)*(n-1) matrices, the result is same type as a row
+  , Map r a m r                    -- grab the first column using "map head" the result is same type as a row
+  , NegateOdds r                   -- flip sign of odd elements of first column
+  , Fold r a                       -- add evertyhing up...
+  , Num r
+  , Num a
+  ) => Det' ((a:.a:.v):.(a:.a:.v):.vs) a                    -- et voila
+  where
+  det' m =
+    sum $ (negateOdds $ map head m) * map det' (dropConsec $ map tail m)
+
+
+-- DropConsec: Drop consecutive elements, collecting the results. Given an
+-- n-vector v, drop each element from v, one at a time in sequence, and collect
+-- the resulting (n-1)-vectors into an n-vector (ie an n-by-(n-1) matrix).
+-- This is used for determinants.
+-- 
+-- dropConsec [1,2,3,4] = [[2,3,4],[1,3,4],[1,2,4],[1,2,3]]
+--
 class DropConsec v vv | v -> vv where
   dropConsec :: v -> vv
 
@@ -344,92 +394,32 @@ instance
 
 
 
---Alternating: vector of alternating positive/negative values. This is also a
---helper for computing determinants
-class Alternating n a v | v -> n a where
-  alternating :: n -> a -> v
+-- Negate the odd or even elements of a vector.
+-- Used for determinants.
 
-instance Alternating N1 a (a:.()) where
-  alternating _ a = a:.()
-  {-# INLINE alternating #-}
+class NegateOdds v where
+  negateOdds :: v -> v 
 
-instance (Num a, Alternating n a (a:.v)) => Alternating (Succ n) a (a:.a:.v) where
-  alternating _ a = a:.(alternating (undefined::n) (negate a))
-  {-# INLINE alternating #-}
+class NegateEvens v where
+  negateEvens :: v -> v 
 
+instance NegateOdds  () where 
+  negateOdds  () = () 
+  {-# INLINE negateOdds #-}
+instance NegateEvens () where 
+  negateEvens () = () 
+  {-# INLINE negateEvens #-}
 
--- The Determinant of a square matrix, by minor expansion. 
-class Det' a m | m -> a where
-  det' :: m -> a
+instance (Num a, NegateEvens v) => NegateOdds (a:.v) where
+  negateOdds (a:.v) = a :. negateEvens v
+  {-# INLINE negateOdds #-}
 
-instance Num a => Det' a ((a:.a:.()):.(a:.a:.()):.()) where
-  det' ( (a:.b:.()) :. (c:.d:.()) :. () ) = a*d-b*c
-  {-# INLINE det' #-}
-
-
---This is the only overlapping instance in the whole library (goddamnit)
-instance
-    (Num a
-    ,Fold v a
-    ,Num v
-    ,Head m v
-    ,Vec n a v
-    ,Map m__ a vm v
-    ,Transpose vmt vm
-    ,DropConsec v vv
-    ,Map v vv m_ vmt
-    ,Tail m m_
-    ,Alternating n a v
-    ,Det' a m__
-    )
-    => Det' a m
-  where
-    det' m =
-      sum ((alternating undefined 1) * (head m) *
-           (map det' (transpose(map(dropConsec)(tail m)))))
-    {-# INLINE det' #-}
-
---For reference, here is the non-overlapping instance that worked in 6.8. When
---I figure out what happened between 6.8 and 6.10, hopefully we can go back to
---a non-overlapping instance.
-
-{-
-instance
-    (Num a
-    ,Num (a:.a:.a:.v)
-    ,Fold (a:.a:.a:.v) a
-    ,Alternating (Succ (Succ (Succ n))) a (a:.a:.a:.v)
-    ,DropConsec (a:.a:.a:.v) vv
-    ,Map (a:.a:.a:.v) vv ((a:.a:.a:.v):.(a:.a:.a:.v):.m) vmt
-    ,Transpose vmt vm
-    ,Map ((a:.a:.v):.(a:.a:.v):.m_) a vm (a:.a:.a:.v)
-    ,Det' a ((a:.a:.v):.(a:.a:.v):.m_)
-    ,Vec (Succ (Succ (Succ n))) a (a:.a:.a:.v)
-    ,Vec (Succ (Succ (Succ n))) (a:.a:.a:.v) ((a:.a:.a:.v):.(a:.a:.a:.v):.(a:.a:.a:.v):.m)
-    )
-     => 
-    Det' a ((a:.a:.a:.v):.(a:.a:.a:.v):.(a:.a:.a:.v):.m)
-  where
-    det' (mh:.mt) =
-      sum ((alternating undefined 1) * mh *
-          (map det' (transpose (map dropConsec mt :: vmt))))
-    {-# INLINE det' #-}
--}
+instance (Num a, NegateOdds v) => NegateEvens (a:.v) where
+  negateEvens (a:.v) = negate a :. negateOdds v
+  {-# INLINE negateEvens #-}
 
 
 
--- For now, use wrapper class to allow type inference. I think maybe the
--- squareness of the matrix is keeping Det' from inferring properly, so we'll
--- enforce that here. But really I have no clue.
-
-
--- | Determinant by minor expansion. Unfolds into a closed form expression.
--- This should be the fastest way for 4x4 and smaller, but @snd . gaussElim@
--- works too.
-
-det :: forall n a r m. (Vec n a r, Vec n r m, Det' a m) => m -> a
-det = det'
-{-# INLINE det #-}
 
 
 
@@ -484,8 +474,8 @@ cramer'sRule ::
   ,Vec n b vv
   ,Vec n a2 b
   ,Fractional a1
-  ,Det' a1 m
-  ,Det' a1 a
+  ,Det' m a1
+  ,Det' a a1
   ) => m -> v -> v
 cramer'sRule m b =
   case map (\m' -> (det' m')/(det' m)) 

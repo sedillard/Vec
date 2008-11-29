@@ -250,16 +250,16 @@ class Fold v a | v -> a where
 
 instance Fold (a:.()) a where
   fold  f   (a:._) = a 
-  foldl f z (a:._) = (f $! z) $! a
-  foldr f z (a:._) = (f $! a) $! z
+  foldl f z (a:._) = seq z $ f z a
+  foldr f z (a:._) = f a z
   {-# INLINE fold #-}
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
 instance Fold (a':.u) a => Fold (a:.a':.u) a where
-  fold  f   (a:.v) = (f $! a) $! (fold f v)
-  foldl f z (a:.v) = (f $! (foldl f z v)) $! a
-  foldr f z (a:.v) = (f $! a) $! (foldr f z v)
+  fold  f   (a:.v) = f a (fold f v)
+  foldl f z (a:.v) = seq z $ f (foldl f z v) a
+  foldr f z (a:.v) = f a (foldr f z v)
   {-# INLINE fold #-}
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
