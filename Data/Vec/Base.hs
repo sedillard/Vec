@@ -38,7 +38,7 @@ instance (Show a, ShowVec v) => Show (a:.v) where
   show (a:.v) = "(" ++ show a ++ "):." ++ showVec v
 
 
--- | Helper to keep parentheses at bay. Just use @show@ as usual.
+-- Helper to keep parentheses at bay. Just use @show@ as usual.
 class ShowVec  v where
   showVec :: v -> String
 
@@ -372,7 +372,7 @@ instance Length () N0 where
   length _ = 0
 
 instance (Length v n) => Length (a:.v) (Succ n) where
-  length (_:.v) = 1+length v
+  length _ = 1+length (undefined::v)
 
 
 -- | sum of vector elements
