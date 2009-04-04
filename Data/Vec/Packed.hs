@@ -1,15 +1,17 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 
 {-# LANGUAGE CPP                       #-}
-{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MagicHash                 #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
+{-# LANGUAGE UnboxedTuples             #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
 -- | Packed vectors : use these whenever possible. The polymorphic vector type
@@ -57,6 +59,16 @@ import Data.Word
 import Data.Int
 import Foreign
 import Test.QuickCheck
+
+import Data.Array.Base  as Array
+import GHC.ST		( ST(..), runST )
+import GHC.Prim     
+import GHC.Base         ( Int(..) )
+import GHC.Word		( Word(..) )
+import GHC.Float	( Float(..), Double(..) )
+import GHC.Int		( Int8(..),  Int16(..),  Int32(..),  Int64(..) )
+import GHC.Word		( Word8(..), Word16(..), Word32(..), Word64(..) )
+
 
 -- | PackedVec class : relates a vector type to its space-optimized
 -- representation. 
@@ -321,3 +333,45 @@ instance (VecList a v, PackedVec v) => VecList a (Packed v)
   {-# INLINE setElem #-}
   {-# INLINE getElem #-}
   {-# INLINE fromList #-}
+
+
+
+-------- UArray instances
+
+instance (VecArrayRW (a:.v), PackedVec (a:.v)) => MArray (STUArray s) (Packed (a:.v)) (ST s) where
+    {-# INLINE getBounds #-}
+    getBounds (STUArray l u _ _) = return (l,u)
+    {-# INLINE getNumElements #-}
+    getNumElements (STUArray _ _ n _) = return n
+    {-# INLINE unsafeNewArray_ #-}
+    unsafeNewArray_ (l,u) = 
+      unsafeNewArraySTUArray_ (l,u) (\x# -> x# *# vaSizeOf# (undefined::a:.v) )
+    {-# INLINE newArray_ #-}
+    newArray_ arrBounds = Array.newArray arrBounds (pack init#)
+    {-# INLINE unsafeRead #-}
+    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# -> 
+        case vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1# of 
+          (# s2, v #) -> (# s2, pack v #)
+    {-# INLINE unsafeWrite #-}
+    unsafeWrite (STUArray _ _ _ marr#) (I# i#) v = ST $ \s1# ->
+        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) (unpack v) s1# of 
+          s2# -> (# s2#, () #) 
+
+instance (VecArrayRW (a:.v), PackedVec (a:.v)) => IArray UArray (Packed (a:.v)) where
+    {-# INLINE bounds #-}
+    bounds (UArray l u _ _) = (l,u)
+    {-# INLINE numElements #-}
+    numElements (UArray _ _ n _) = n
+    {-# INLINE unsafeArray #-}
+    unsafeArray lu ies = runST (unsafeArrayUArray lu ies (pack init#) )
+    {-# INLINE unsafeAt #-}
+    unsafeAt (UArray _ _ _ arr#) (I# i#) = pack $ vaIndex# arr# (vaLength# (undefined::a:.v) *# i#)
+    {-# INLINE unsafeReplace #-}
+    unsafeReplace arr ies = runST (unsafeReplaceUArray arr ies)
+    {-# INLINE unsafeAccum #-}
+    unsafeAccum f arr ies = runST (unsafeAccumUArray f arr ies)
+    {-# INLINE unsafeAccumArray #-}
+    unsafeAccumArray f initialValue lu ies = runST (unsafeAccumArrayUArray f initialValue lu ies)
+
+
+

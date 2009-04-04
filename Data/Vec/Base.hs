@@ -1,15 +1,17 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 
-{-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE EmptyDataDecls            #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MagicHash                 #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
+{-# LANGUAGE UnboxedTuples             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- {-# HADDOCK_OPTIONS prune #-}
 
@@ -23,6 +25,17 @@ import Prelude hiding (map,zipWith,foldl,foldr,reverse,
 import qualified Prelude as P
 import Foreign
 import Test.QuickCheck
+
+--for UArray instances
+import Data.Array.Base  as Array
+import GHC.ST		( ST(..), runST )
+import GHC.Prim     
+import GHC.Base         ( Int(..) )
+import GHC.Word		( Word(..) )
+import GHC.Float	( Float(..), Double(..) )
+import GHC.Int		( Int8(..),  Int16(..),  Int32(..),  Int64(..) )
+import GHC.Word		( Word8(..), Word16(..), Word32(..), Word64(..) )
+
 
 -- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
 -- @()@ takes the place of @[]@. (The list of instances here is not meant to be
@@ -555,3 +568,217 @@ instance (Length (a:.v) (Succ n), Arbitrary a', Arbitrary (a:.v)) => Arbitrary (
   arbitrary = arbitrary >>= \a -> 
               arbitrary >>= \v -> return (a:.v);
   coarbitrary (a:.v) = variant (length v) . coarbitrary a . coarbitrary v
+
+
+
+--- UArray instances
+
+sizeOf# :: Storable a => a -> Int#
+sizeOf# x = case sizeOf x of I# n# -> n#
+
+
+-- primitive array reading/writing for vectors
+class VecArrayRW v where
+    vaRead#   :: MutableByteArray# s# -> Int# -> State# s# -> (# State# s#, v #)
+    vaWrite#  :: MutableByteArray# s# -> Int# -> v -> State# s# -> State# s#
+    vaIndex#  :: ByteArray# -> Int# -> v
+    vaSizeOf# :: v -> Int# --the size of a vector in bytes
+    vaLength# :: v -> Int# --the length of a vector 
+    init#     :: v         --the default item when newArray_ is used
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+
+instance VecArrayRW (Int:.()) where
+    vaRead# arr# i# s1# =
+        case readIntArray# arr# i# s1# of 
+          (# s2#, x# #) -> (# s2#, ((I# x#):.()) #) 
+    vaWrite# arr# i# ((I# x#):._) s1# = 
+        case writeIntArray# arr# i# x# s1# of { s2# -> s2# }
+    vaIndex# arr# i# = I# (indexIntArray# arr# i#) :. ()
+    vaSizeOf# _ = sizeOf# (undefined::Int)
+    vaLength# _ = 1#
+    init# = 0:.()
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+instance (VecArrayRW (Int:.v)) => VecArrayRW (Int:.Int:.v) where
+    vaRead# arr# i# s1# = 
+        case readIntArray# arr# i# s1# of { (# s2#, x# #) -> 
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+        (# s3#, ((I# x#):.v) #) }}
+    vaWrite# arr# i# ((I# x#):.v) s1# = 
+        case writeIntArray# arr# i# x# s1# of { s2# -> 
+        case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
+    vaIndex# arr# i# = I# (indexIntArray# arr# i#) :. 
+                       vaIndex# arr# (i# +# 1#)
+    vaSizeOf# _ = sizeOf# (undefined::Int) +# vaSizeOf# (undefined::Int:.v)
+    vaLength# _ = 1# +# vaLength# (undefined::Int:.v)
+    init# = 0 :. init# 
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+instance VecArrayRW (Double:.()) where
+    vaRead# arr# i# s1# =
+        case readDoubleArray# arr# i# s1# of 
+          (# s2#, x# #) -> (# s2#, ((D# x#):.()) #) 
+    vaWrite# arr# i# ((D# x#):._) s1# = 
+        case writeDoubleArray# arr# i# x# s1# of { s2# -> s2# }
+    vaIndex# arr# i# = D# (indexDoubleArray# arr# i#) :. ()
+    vaSizeOf# _ = sizeOf# (undefined::Double)
+    vaLength# _ = 1#
+    init# = 0:.()
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+instance (VecArrayRW (Double:.v)) => VecArrayRW (Double:.Double:.v) where
+    vaRead# arr# i# s1# = 
+        case readDoubleArray# arr# i# s1# of { (# s2#, x# #) -> 
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+        (# s3#, ((D# x#):.v) #) }}
+    vaWrite# arr# i# ((D# x#):.v) s1# = 
+        case writeDoubleArray# arr# i# x# s1# of { s2# -> 
+        case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
+    vaIndex# arr# i# = D# (indexDoubleArray# arr# i#) :. 
+                       vaIndex# arr# (i# +# 1#)
+    vaSizeOf# _ = sizeOf# (undefined::Double) +# vaSizeOf# (undefined::Double:.v)
+    vaLength# _ = 1# +# vaLength# (undefined::Double:.v)
+    init# = 0 :. init# 
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+
+instance VecArrayRW (Float:.()) where
+    vaRead# arr# i# s1# =
+        case readFloatArray# arr# i# s1# of 
+          (# s2#, x# #) -> (# s2#, ((F# x#):.()) #) 
+    vaWrite# arr# i# ((F# x#):._) s1# = 
+        case writeFloatArray# arr# i# x# s1# of { s2# -> s2# }
+    vaIndex# arr# i# = F# (indexFloatArray# arr# i#) :. ()
+    vaSizeOf# _ = sizeOf# (undefined::Float)
+    vaLength# _ = 1#
+    init# = 0:.()
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+instance (VecArrayRW (Float:.v)) => VecArrayRW (Float:.Float:.v) where
+    vaRead# arr# i# s1# = 
+        case readFloatArray# arr# i# s1# of { (# s2#, x# #) -> 
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+        (# s3#, ((F# x#):.v) #) }}
+    vaWrite# arr# i# ((F# x#):.v) s1# = 
+        case writeFloatArray# arr# i# x# s1# of { s2# -> 
+        case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
+    vaIndex# arr# i# = F# (indexFloatArray# arr# i#) :. 
+                       vaIndex# arr# (i# +# 1#)
+    vaSizeOf# _ = sizeOf# (undefined::Float) +# vaSizeOf# (undefined::Float:.v)
+    vaLength# _ = 1# +# vaLength# (undefined::Float:.v)
+    init# = 0 :. init# 
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+
+instance VecArrayRW (Word8:.()) where
+    vaRead# arr# i# s1# =
+        case readWord8Array# arr# i# s1# of 
+          (# s2#, x# #) -> (# s2#, ((W8# x#):.()) #) 
+    vaWrite# arr# i# ((W8# x#):._) s1# = 
+        case writeWord8Array# arr# i# x# s1# of { s2# -> s2# }
+    vaIndex# arr# i# = W8# (indexWord8Array# arr# i#) :. ()
+    vaSizeOf# _ = sizeOf# (undefined::Word8)
+    vaLength# _ = 1#
+    init# = 0:.()
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+instance (VecArrayRW (Word8:.v)) => VecArrayRW (Word8:.Word8:.v) where
+    vaRead# arr# i# s1# = 
+        case readWord8Array# arr# i# s1# of { (# s2#, x# #) -> 
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+        (# s3#, ((W8# x#):.v) #) }}
+    vaWrite# arr# i# ((W8# x#):.v) s1# = 
+        case writeWord8Array# arr# i# x# s1# of { s2# -> 
+        case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
+    vaIndex# arr# i# = W8# (indexWord8Array# arr# i#) :. 
+                       vaIndex# arr# (i# +# 1#)
+    vaSizeOf# _ = sizeOf# (undefined::Word8) +# vaSizeOf# (undefined::Word8:.v)
+    vaLength# _ = 1# +# vaLength# (undefined::Word8:.v)
+    init# = 0 :. init# 
+    {-# INLINE vaRead# #-}
+    {-# INLINE vaWrite# #-}
+    {-# INLINE vaIndex# #-}
+    {-# INLINE vaSizeOf# #-}
+    {-# INLINE vaLength# #-}
+    {-# INLINE init# #-}
+
+
+
+
+
+instance VecArrayRW (a:.v) => MArray (STUArray s) (a:.v) (ST s) where
+    {-# INLINE getBounds #-}
+    getBounds (STUArray l u _ _) = return (l,u)
+    {-# INLINE getNumElements #-}
+    getNumElements (STUArray _ _ n _) = return n
+    {-# INLINE unsafeNewArray_ #-}
+    unsafeNewArray_ (l,u) = 
+        unsafeNewArraySTUArray_ (l,u) (\x# -> x# *# vaSizeOf# (undefined::a:.v) )
+    {-# INLINE newArray_ #-}
+    newArray_ arrBounds = Array.newArray arrBounds init#
+    {-# INLINE unsafeRead #-}
+    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# -> 
+        vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1# 
+    {-# INLINE unsafeWrite #-}
+    unsafeWrite (STUArray _ _ _ marr#) (I# i#) v = ST $ \s1# ->
+        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) v s1# of s2# -> (# s2#, () #) 
+
+instance VecArrayRW (a:.v) => IArray UArray (a:.v) where
+    {-# INLINE bounds #-}
+    bounds (UArray l u _ _) = (l,u)
+    {-# INLINE numElements #-}
+    numElements (UArray _ _ n _) = n
+    {-# INLINE unsafeArray #-}
+    unsafeArray lu ies = runST (unsafeArrayUArray lu ies init# )
+    {-# INLINE unsafeAt #-}
+    unsafeAt (UArray _ _ _ arr#) (I# i#) = 
+        vaIndex# arr# (vaLength# (undefined::a:.v) *# i#)
+    {-# INLINE unsafeReplace #-}
+    unsafeReplace arr ies = runST (unsafeReplaceUArray arr ies)
+    {-# INLINE unsafeAccum #-}
+    unsafeAccum f arr ies = runST (unsafeAccumUArray f arr ies)
+    {-# INLINE unsafeAccumArray #-}
+    unsafeAccumArray f initialValue lu ies = 
+        runST (unsafeAccumArrayUArray f initialValue lu ies)
+

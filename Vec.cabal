@@ -20,7 +20,7 @@ Build-type:          Simple
 Category:            Data,Math
 
 library
-    Build-Depends:      base,QuickCheck<2
+    Build-Depends:      base,QuickCheck<2,array,ghc-prim
 
     Exposed-modules:    Data.Vec 
                         Data.Vec.Base,

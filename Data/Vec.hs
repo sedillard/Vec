@@ -78,13 +78,14 @@ The rule is simple :
 @(:.)@ is strict in both arguments, but it is also polymorphic, so at runtime
 vectors will be realized as linked lists, albeit with less pattern matching.
 However the library provides packed representations for 2,3 and 4d vectors of
-Ints, Floats and Doubles. @'Vec3F' x y z@ constructs a packed vector of
-unboxed Floats. Functions @'pack'@ and @'unpack'@ convert between packed and
-unpacked types. When vector operations are bracketed by 'pack' and 'unpack',
-GHC can unfold them into very efficient code. The 'Storable' instances for
-vectors also generate fast code.  Without optimizations, the code falls back
-into linked-list mode. The optimizations depend on inlining, so you may need
-to increase your unfolding threshold in certain situations.
+Ints, Floats and Doubles. @'Vec3F' x y z@ constructs a packed vector of unboxed
+Floats. Functions @'pack'@ and @'unpack'@ convert between packed and unpacked
+types. When vector operations are bracketed by 'pack' and 'unpack', GHC can
+unfold them into very efficient code. The 'Storable' and 'UArray' instances for
+vectors also store them efficiently and generate fast code.  Without
+optimizations, the code falls back into linked-list mode. The optimizations
+depend on inlining, so you may need to increase your unfolding threshold in
+certain situations.
 
 /GHC Extensions/
 
