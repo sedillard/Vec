@@ -55,9 +55,6 @@ import Data.Vec.Nat
 import Control.Monad
 import Data.Maybe
 
-import Unsafe.Coerce
-
-
 -- | dot \/ inner \/ scalar product
 dot ::  (Num a, Num v, Fold v a) => v -> v -> a
 dot u v = sum (u*v)
@@ -628,8 +625,10 @@ class BackSubstitute m where
   -- row echelon form. Returns @Nothing@ if the matrix is rank deficient. 
   backSubstitute :: m -> Maybe m 
 
-instance BackSubstitute ((a:.r):.()) where
-  backSubstitute = Just . id
+instance NearZero a => BackSubstitute ((a:.r):.()) where
+  backSubstitute r@((a:._):._) 
+    | nearZero (1-a) = Just r
+    | otherwise = Nothing
   {-# INLINE backSubstitute #-}
 
 instance 
@@ -643,11 +642,11 @@ instance
     , BackSubstitute rs_
     ) => BackSubstitute ((a:.r):.(a:.r):.rs)
   where
-    backSubstitute (r@(rh:.rt):.rs) 
+    backSubstitute m@(r@(rh:.rt):.rs) 
       | nearZero (1-rh) = 
-        liftM (map (0:.)) (backSubstitute . map tail $ rs) >>= \rs' -> 
-          return . (:.rs') . foldl (\v (a,w) -> sub v a w) r $ 
-            zipWith (,) rt rs'
+          liftM (map (0:.)) (backSubstitute . map tail $ rs) >>= \rs' -> 
+            return . (:.rs') . foldl (\v (a,w) -> sub v a w) r $ 
+              zipWith (,) rt rs'
       | otherwise = Nothing -- rank deficient
           where sub v a = zipWith (-) v . map (*a)
     {-# INLINE backSubstitute #-}
@@ -705,7 +704,7 @@ invert m =
 
 -- | inverse and determinant. If det = 0, inverted matrix is garbage.
 invertAndDet :: forall n a r m r' m'. 
-  ( Num r, Num m
+  ( Num a, Num r, Num m
   , Vec n a r     -- r is row type
   , Vec n r m     -- m is matrix type
   , Append r r r' -- r' is a row of augmented matrix
@@ -714,12 +713,16 @@ invertAndDet :: forall n a r m r' m'.
   , Map r' r m' m -- get the right half of the augmented matrix
   , SetDiagonal r m -- needed to make identity matrix
   , GaussElim a m'
-  , BackSubstitute' m'
+  , BackSubstitute m'
   ) => m -> (m,a)
 invertAndDet m = 
-  mapFst ( (map dropn) . backSubstitute') . gaussElim . zipWith append m $ i
-  where dropn = drop (undefined::n)
-        i = identity :: m
+  case backSubstitute rref of
+    Nothing -> (m,0)
+    Just m' -> ( map dropn m' , d )
+  where 
+    (rref,d) = gaussElim . zipWith append m $ i
+    dropn = drop (undefined::n)
+    i = identity :: m
 {-# INLINE invertAndDet #-}
 
 -- | Solution of linear system by Gaussian elimination. Returns @Nothing@
