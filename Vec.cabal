@@ -15,12 +15,12 @@ Description:
    with vectors. Built up from these functions are a small but useful set of
    linear algebra operations: matrix multiplication, determinants, solving
    linear systems, inverting matrices.
-Cabal-version:       >=1.2
+Cabal-version:       >=1.2.3
 Build-type:          Simple
 Category:            Data,Math
 
 library
-    Build-Depends:      base,QuickCheck<2,array,ghc-prim
+    Build-Depends:      base<=5,QuickCheck<2,array,ghc-prim
 
     Exposed-modules:    Data.Vec 
                         Data.Vec.Base,
