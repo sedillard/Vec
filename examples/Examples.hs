@@ -10,6 +10,7 @@ import qualified Prelude as P
 import Foreign
 import Control.Monad
 import System
+import Data.Maybe
 
 
 --Some sample vectors and matrices

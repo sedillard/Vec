@@ -10,7 +10,7 @@ import Data.List as List
 type Triangle a = Vec3 (Vec2 a)
 
 --                              | x0 y0 1 |
--- 2*signedArea of a triangle = | x0 y0 1 | 
+-- 2*signedArea of a triangle = | x1 y1 1 | 
 --                              | x2 y2 1 |
 
 signedArea2 t = det (V.map (flip V.snoc 1) t)

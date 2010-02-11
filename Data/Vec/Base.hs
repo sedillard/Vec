@@ -365,7 +365,7 @@ instance Last (a':.v) a => Last (a:.a':.v) a where
 
 
 -- | @snoc v a@ appends the element a to the end of v. 
-class Snoc v a v' | v a -> v', v' -> v a, v -> a where 
+class Snoc v a v' | v a -> v', v' -> v a where 
   snoc :: v -> a -> v'
 
 instance Snoc () a (a:.()) where
