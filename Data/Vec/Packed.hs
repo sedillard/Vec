@@ -270,6 +270,9 @@ instance (Storable v, PackedVec v) => Storable (Packed v)
 instance (Arbitrary v, PackedVec v) => Arbitrary (Packed v)
   where
   arbitrary = arbitrary >>= return . pack
+
+instance (CoArbitrary v, PackedVec v) => CoArbitrary (Packed v)
+  where
   coarbitrary v = coarbitrary (unpack v)
 
 

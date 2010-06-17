@@ -562,14 +562,16 @@ instance
 
 instance Arbitrary a => Arbitrary (a:.()) where
   arbitrary = arbitrary >>= return . (:.())
+
+instance CoArbitrary a => CoArbitrary (a:.()) where
   coarbitrary (a:._) = variant 0 . coarbitrary a
 
 instance (Length (a:.v) (Succ n), Arbitrary a', Arbitrary (a:.v)) => Arbitrary (a':.a:.v) where
   arbitrary = arbitrary >>= \a -> 
               arbitrary >>= \v -> return (a:.v);
+
+instance (Length (a:.v) (Succ n), CoArbitrary a', CoArbitrary (a:.v)) => CoArbitrary (a':.a:.v) where
   coarbitrary (a:.v) = variant (length v) . coarbitrary a . coarbitrary v
-
-
 
 --- UArray instances
 
