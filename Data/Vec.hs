@@ -29,7 +29,9 @@ Vec : a library for fixed-length lists and low-dimensional linear algebra
 
 Scott E. Dillard <sedillard@gmail.com>
 
-darcs : <http://graphics.cs.ucdavis.edu/~sdillard/Vec>
+The darcs repository is at <http://graphics.cs.ucdavis.edu/~sdillard/Vec>
+
+Some examples can be found at <http://graphics.cs.ucdavis.edu/~sdillard/Vec/examples>
 
 /Synopsis/
 
