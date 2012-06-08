@@ -24,17 +24,14 @@ import Prelude hiding (map,zipWith,foldl,foldr,reverse,
                        minimum,maximum,length)
 import qualified Prelude as P
 import Foreign
-import Test.QuickCheck
 
 --for UArray instances
 import Data.Array.Base  as Array
 import GHC.ST		( ST(..), runST )
 import GHC.Prim     
 import GHC.Base         ( Int(..) )
-import GHC.Word		( Word(..) )
 import GHC.Float	( Float(..), Double(..) )
-import GHC.Int		( Int8(..),  Int16(..),  Int32(..),  Int64(..) )
-import GHC.Word		( Word8(..), Word16(..), Word32(..), Word64(..) )
+import GHC.Word		( Word8(..) )
 
 
 -- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
@@ -262,7 +259,7 @@ class Fold v a | v -> a where
   foldr :: (a -> b -> b) -> b -> v -> b
 
 instance Fold (a:.()) a where
-  fold  f   (a:._) = a 
+  fold  _   (a:._) = a 
   foldl f z (a:._) = seq z $ f z a
   foldr f z (a:._) = f a z
   {-# INLINE fold #-}
@@ -346,7 +343,7 @@ instance Drop N0 v v where
 
 instance (Drop n (a:.v) v') 
           => Drop (Succ n) (a:.a:.v) v' where
-  drop _ (a:.v) = drop (undefined::n) v
+  drop _ (_:.v) = drop (undefined::n) v
   {-# INLINE drop #-}
 
 
@@ -360,7 +357,7 @@ instance Last (a:.()) a where
   {-# INLINE last #-}
 
 instance Last (a':.v) a => Last (a:.a':.v) a where
-  last (a:.v) = last v
+  last (_:.v) = last v
   {-# INLINE last #-}
 
 
@@ -516,9 +513,7 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 --    If it's binary, it's a zipWith.
 
 instance
-    (Eq (a:.u)
-    ,Show (a:.u)
-    ,Num a
+    (Eq u, ShowVec u, Num a
     ,Map a a (a:.u) (a:.u) 
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Vec (Succ l) a (a:.u)
@@ -540,7 +535,7 @@ instance
 
 
 instance 
-    (Fractional a
+    (Eq u, ShowVec u, Fractional a
     ,Ord (a:.u)
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Map a a (a:.u) (a:.u)
@@ -558,20 +553,6 @@ instance
 
 
 
--- Arbitrary instances
-
-instance Arbitrary a => Arbitrary (a:.()) where
-  arbitrary = arbitrary >>= return . (:.())
-
-instance CoArbitrary a => CoArbitrary (a:.()) where
-  coarbitrary (a:._) = variant 0 . coarbitrary a
-
-instance (Length (a:.v) (Succ n), Arbitrary a', Arbitrary (a:.v)) => Arbitrary (a':.a:.v) where
-  arbitrary = arbitrary >>= \a -> 
-              arbitrary >>= \v -> return (a:.v);
-
-instance (Length (a:.v) (Succ n), CoArbitrary a', CoArbitrary (a:.v)) => CoArbitrary (a':.a:.v) where
-  coarbitrary (a:.v) = variant (length v) . coarbitrary a . coarbitrary v
 
 --- UArray instances
 
@@ -587,12 +568,6 @@ class VecArrayRW v where
     vaSizeOf# :: v -> Int# --the size of a vector in bytes
     vaLength# :: v -> Int# --the length of a vector 
     init#     :: v         --the default item when newArray_ is used
-    {-# INLINE vaRead# #-}
-    {-# INLINE vaWrite# #-}
-    {-# INLINE vaIndex# #-}
-    {-# INLINE vaSizeOf# #-}
-    {-# INLINE vaLength# #-}
-    {-# INLINE init# #-}
 
 
 instance VecArrayRW (Int:.()) where

@@ -58,7 +58,6 @@ import Data.Vec.LinAlg --just for haddock
 import Data.Word
 import Data.Int
 import Foreign
-import Test.QuickCheck
 
 import Data.Array.Base  as Array
 import GHC.ST		( ST(..), runST )
@@ -265,16 +264,6 @@ instance (Storable v, PackedVec v) => Storable (Packed v)
   {-# INLINE poke #-}
   {-# INLINE pokeByteOff #-}
   {-# INLINE pokeElemOff #-}
-
-
-instance (Arbitrary v, PackedVec v) => Arbitrary (Packed v)
-  where
-  arbitrary = arbitrary >>= return . pack
-
-instance (CoArbitrary v, PackedVec v) => CoArbitrary (Packed v)
-  where
-  coarbitrary v = coarbitrary (unpack v)
-
 
 
 instance (Length v n, PackedVec v) => Length (Packed v) n

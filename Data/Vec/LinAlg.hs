@@ -489,7 +489,7 @@ mapFst f (a,b) = (f a,b)
 {-# INLINE mapFst #-}
 
 
-class Num a => NearZero a where
+class (Eq a, Num a) => NearZero a where
   -- | @nearZero x@ should be true when x is close enough to 0 to cause
   -- significant error in division. 
   nearZero :: a -> Bool
@@ -523,7 +523,7 @@ instance Pivot1 a () where
   pivot1 _ = Nothing
 
 instance 
-    ( Fractional a, NearZero a
+    ( Show a, Fractional a, NearZero a
     ) => Pivot1 a ((a:.()):.()) 
   where
     pivot1 ((p:._):._) 

@@ -1,5 +1,5 @@
 Name:                Vec
-Version:             0.9.8
+Version:             0.9.9
 License:             BSD3
 License-file:        LICENSE
 Author:              Scott E. Dillard
@@ -20,7 +20,7 @@ Build-type:          Simple
 Category:            Data,Math
 
 library
-    Build-Depends:      base<=5,QuickCheck>=2&&<3,array,ghc-prim
+    Build-Depends:      base<=5,array,ghc-prim
 
     Exposed-modules:    Data.Vec 
                         Data.Vec.Base,
