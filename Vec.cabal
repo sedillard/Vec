@@ -4,7 +4,7 @@ License:             BSD3
 License-file:        LICENSE
 Author:              Scott E. Dillard
 Maintainer:          Scott E. Dillard <sedillard@gmail.com>
-Homepage:            http://graphics.cs.ucdavis.edu/~sdillard/Vec
+Homepage:            http://github.net/sedillard/Vec
 Stability:           Experimental
 Synopsis:            Fixed-length lists and low-dimensional linear algebra.
 Description:         
