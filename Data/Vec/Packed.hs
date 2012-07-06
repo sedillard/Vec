@@ -88,6 +88,35 @@ class PackedVec v where
 
 
 
+instance PackedVec (Vec2 Bool) where
+  data Packed (Vec2 Bool) = Vec2B {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool
+  pack (a:.b:.()) = Vec2B a b
+  unpack (Vec2B a b) = a:.b:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
+
+instance PackedVec (Vec3 Bool) where
+  data Packed (Vec3 Bool) = Vec3B {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool
+  pack (a:.b:.c:.()) = Vec3B a b c
+  unpack (Vec3B a b c) = a:.b:.c:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
+
+instance PackedVec (Vec4 Bool) where
+  data Packed (Vec4 Bool) = Vec4B {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool {-#UNPACK#-} !Bool
+  pack (a:.b:.c:.d:.()) = Vec4B a b c d
+  unpack (Vec4B a b c d) = a:.b:.c:.d:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
+
+
+type Vec2B = Packed (Vec2 Bool)
+type Vec3B = Packed (Vec3 Bool)
+type Vec4B = Packed (Vec4 Bool)
+
+
+
+
 instance PackedVec (Vec2 Int) where 
   data Packed (Vec2 Int) = Vec2I {-#UNPACK#-} !Int {-#UNPACK#-} !Int
   pack (a:.b:.()) = Vec2I a b    
