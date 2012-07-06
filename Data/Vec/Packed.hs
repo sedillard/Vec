@@ -31,7 +31,7 @@
 -- Double)@.  The constructor name is also a synonym for the packed type name,
 -- i.e., @type Vec3D = Packed (Vec3 Double)@, so the packed type acts as if it
 -- had been declared @data Vec3D = Vec3D x y z@.
--- 
+--
 -- 'Storable', 'Num', 'Fractional', 'Fold', 'Map', and 'ZipWith' instances are
 -- provided for packed vectors, so some operations do not require pack/unpack.
 -- For example, @'dot'@ does not require pack/unpack because it is defined in
@@ -61,7 +61,7 @@ import Foreign
 
 import Data.Array.Base  as Array
 import GHC.ST		( ST(..), runST )
-import GHC.Prim     
+import GHC.Prim
 import GHC.Base         ( Int(..) )
 import GHC.Word		( Word(..) )
 import GHC.Float	( Float(..), Double(..) )
@@ -70,18 +70,18 @@ import GHC.Word		( Word8(..), Word16(..), Word32(..), Word64(..) )
 
 
 -- | PackedVec class : relates a vector type to its space-optimized
--- representation. 
+-- representation.
 class PackedVec v where
   -- | The packed representation of 'v'
-  data Packed v      
+  data Packed v
   pack   :: v -> Packed v
   unpack :: Packed v -> v
 
 
 --who knows if this even does anything
-{-# RULES 
+{-# RULES
       "Vec pack/unpack" forall x.
-        pack (unpack x) = x; 
+        pack (unpack x) = x;
       "Vec unpack/pack" forall x.
         unpack (pack x) = x;  #-}
 
@@ -117,21 +117,21 @@ type Vec4B = Packed (Vec4 Bool)
 
 
 
-instance PackedVec (Vec2 Int) where 
+instance PackedVec (Vec2 Int) where
   data Packed (Vec2 Int) = Vec2I {-#UNPACK#-} !Int {-#UNPACK#-} !Int
-  pack (a:.b:.()) = Vec2I a b    
-  unpack (Vec2I a b) = a:.b:.() 
-  {-# INLINE pack #-}             
-  {-# INLINE unpack #-}               
+  pack (a:.b:.()) = Vec2I a b
+  unpack (Vec2I a b) = a:.b:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec3 Int) where 
-  data Packed (Vec3 Int) = Vec3I {-#UNPACK#-} !Int {-#UNPACK#-} !Int {-#UNPACK#-} !Int 
-  pack (a:.b:.c:.()) = Vec3I a b c; 
+instance PackedVec (Vec3 Int) where
+  data Packed (Vec3 Int) = Vec3I {-#UNPACK#-} !Int {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+  pack (a:.b:.c:.()) = Vec3I a b c;
   unpack (Vec3I a b c) = a:.b:.c:.();
-  {-# INLINE pack #-}                 
-  {-# INLINE unpack #-}                 
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec4 Int) where 
+instance PackedVec (Vec4 Int) where
   data Packed (Vec4 Int) = Vec4I {-#UNPACK#-} !Int {-#UNPACK#-} !Int  {-#UNPACK#-} !Int {-#UNPACK#-} !Int
   pack (a:.b:.c:.d:.()) = Vec4I a b c d
   unpack (Vec4I a b c d) = a:.b:.c:.d:.()
@@ -146,21 +146,21 @@ type Vec4I = Packed (Vec4 Int)
 
 
 
-instance PackedVec (Vec2 Float) where 
+instance PackedVec (Vec2 Float) where
   data Packed (Vec2 Float) = Vec2F {-#UNPACK#-} !Float {-#UNPACK#-} !Float
-  pack (a:.b:.()) = Vec2F a b    
-  unpack (Vec2F a b) = a:.b:.() 
-  {-# INLINE pack #-}             
-  {-# INLINE unpack #-}               
+  pack (a:.b:.()) = Vec2F a b
+  unpack (Vec2F a b) = a:.b:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec3 Float) where 
-  data Packed (Vec3 Float) = Vec3F {-#UNPACK#-} !Float {-#UNPACK#-} !Float {-#UNPACK#-} !Float 
-  pack (a:.b:.c:.()) = Vec3F a b c; 
+instance PackedVec (Vec3 Float) where
+  data Packed (Vec3 Float) = Vec3F {-#UNPACK#-} !Float {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+  pack (a:.b:.c:.()) = Vec3F a b c;
   unpack (Vec3F a b c) = a:.b:.c:.();
-  {-# INLINE pack #-}                 
-  {-# INLINE unpack #-}                 
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec4 Float) where 
+instance PackedVec (Vec4 Float) where
   data Packed (Vec4 Float) = Vec4F {-#UNPACK#-} !Float {-#UNPACK#-} !Float  {-#UNPACK#-} !Float {-#UNPACK#-} !Float
   pack (a:.b:.c:.d:.()) = Vec4F a b c d
   unpack (Vec4F a b c d) = a:.b:.c:.d:.()
@@ -175,21 +175,21 @@ type Vec4F = Packed (Vec4 Float)
 
 
 
-instance PackedVec (Vec2 Double) where 
+instance PackedVec (Vec2 Double) where
   data Packed (Vec2 Double) = Vec2D {-#UNPACK#-} !Double {-#UNPACK#-} !Double
-  pack (a:.b:.()) = Vec2D a b    
-  unpack (Vec2D a b) = a:.b:.() 
-  {-# INLINE pack #-}             
-  {-# INLINE unpack #-}               
+  pack (a:.b:.()) = Vec2D a b
+  unpack (Vec2D a b) = a:.b:.()
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec3 Double) where 
-  data Packed (Vec3 Double) = Vec3D {-#UNPACK#-} !Double {-#UNPACK#-} !Double {-#UNPACK#-} !Double 
-  pack (a:.b:.c:.()) = Vec3D a b c; 
+instance PackedVec (Vec3 Double) where
+  data Packed (Vec3 Double) = Vec3D {-#UNPACK#-} !Double {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+  pack (a:.b:.c:.()) = Vec3D a b c;
   unpack (Vec3D a b c) = a:.b:.c:.();
-  {-# INLINE pack #-}                 
-  {-# INLINE unpack #-}                 
+  {-# INLINE pack #-}
+  {-# INLINE unpack #-}
 
-instance PackedVec (Vec4 Double) where 
+instance PackedVec (Vec4 Double) where
   data Packed (Vec4 Double) = Vec4D {-#UNPACK#-} !Double {-#UNPACK#-} !Double  {-#UNPACK#-} !Double {-#UNPACK#-} !Double
   pack (a:.b:.c:.d:.()) = Vec4D a b c d
   unpack (Vec4D a b c d) = a:.b:.c:.d:.()
@@ -209,11 +209,11 @@ type Mat44D = Vec4 (Vec4D)
 
 
 -- | Construct a semi-packed matrix, one whose rows are packed.
-packMat ::  (Map row (Packed row) mat packedMat, PackedVec row) 
+packMat ::  (Map row (Packed row) mat packedMat, PackedVec row)
              => mat -> packedMat
 packMat = map pack
 
-unpackMat ::  (Map (Packed row) row packedMat mat, PackedVec row) 
+unpackMat ::  (Map (Packed row) row packedMat mat, PackedVec row)
              => packedMat -> mat
 unpackMat = map unpack
 
@@ -230,8 +230,8 @@ instance (Ord v, PackedVec v) => Ord (Packed v) where
 instance (Show v, PackedVec v) => Show (Packed v) where
   show v = show (unpack v)
 
-instance (Map a b u v, PackedVec u, PackedVec v) 
-          => Map a b (Packed u) (Packed v) 
+instance (Map a b u v, PackedVec u, PackedVec v)
+          => Map a b (Packed u) (Packed v)
   where
   map f = pack . map f . unpack
   {-# INLINE map #-}
@@ -251,9 +251,9 @@ instance (ZipWith a b c u v w, PackedVec u, PackedVec v, PackedVec w)
   zipWith f u v = pack $ zipWith f (unpack u) (unpack v)
   {-# INLINE zipWith #-}
 
-instance (Num v, PackedVec v) => Num (Packed v) 
+instance (Num v, PackedVec v) => Num (Packed v)
   where
-  (+) u v = pack (unpack u + unpack v) 
+  (+) u v = pack (unpack u + unpack v)
   (-) u v = pack (unpack u - unpack v)
   (*) u v = pack (unpack u * unpack v)
   abs u   = pack (abs (unpack u))
@@ -265,7 +265,7 @@ instance (Num v, PackedVec v) => Num (Packed v)
   {-# INLINE abs #-}
   {-# INLINE signum #-}
   {-# INLINE fromInteger #-}
-    
+
 instance (Fractional v, PackedVec v) => Fractional (Packed v)
   where
   (/) u v = pack (unpack u / unpack v)
@@ -306,7 +306,7 @@ instance (Head v h, PackedVec v) => Head (Packed v) h
   {-# INLINE head #-}
 
 instance (Tail v t, PackedVec v, PackedVec t) => Tail (Packed v) (Packed t)
-  where 
+  where
   tail v = pack (tail (unpack v))
   {-# INLINE tail #-}
 
@@ -315,25 +315,25 @@ instance (Last v l, PackedVec v) => Last (Packed v) l
   last v = last (unpack v)
   {-# INLINE last #-}
 
-instance (Snoc v a v', PackedVec v, PackedVec v') 
+instance (Snoc v a v', PackedVec v, PackedVec v')
           => Snoc (Packed v) a (Packed v')
   where
   snoc v a = pack (snoc (unpack v) a)
   {-# INLINE snoc #-}
 
-instance (Reverse' () v v', PackedVec v, PackedVec v') 
+instance (Reverse' () v v', PackedVec v, PackedVec v')
           => Reverse' () (Packed v) (Packed v')
   where
   reverse' _ v = pack (reverse (unpack v))
   {-# INLINE reverse' #-}
 
-instance (Take (Succ n) v v', PackedVec v, PackedVec v') 
+instance (Take (Succ n) v v', PackedVec v, PackedVec v')
           => Take (Succ n) (Packed v) (Packed v')
   where
   take n v = pack (take n (unpack v))
   {-# INLINE take #-}
 
-instance (Drop n v v', PackedVec v, PackedVec v') 
+instance (Drop n v v', PackedVec v, PackedVec v')
           => Drop n (Packed v) (Packed v')
   where
   drop n v = pack (drop n (unpack v))
@@ -365,18 +365,18 @@ instance (VecArrayRW (a:.v), PackedVec (a:.v)) => MArray (STUArray s) (Packed (a
     {-# INLINE getNumElements #-}
     getNumElements (STUArray _ _ n _) = return n
     {-# INLINE unsafeNewArray_ #-}
-    unsafeNewArray_ (l,u) = 
+    unsafeNewArray_ (l,u) =
       unsafeNewArraySTUArray_ (l,u) (\x# -> x# *# vaSizeOf# (undefined::a:.v) )
     {-# INLINE newArray_ #-}
     newArray_ arrBounds = Array.newArray arrBounds (pack init#)
     {-# INLINE unsafeRead #-}
-    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# -> 
-        case vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1# of 
+    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# ->
+        case vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1# of
           (# s2, v #) -> (# s2, pack v #)
     {-# INLINE unsafeWrite #-}
     unsafeWrite (STUArray _ _ _ marr#) (I# i#) v = ST $ \s1# ->
-        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) (unpack v) s1# of 
-          s2# -> (# s2#, () #) 
+        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) (unpack v) s1# of
+          s2# -> (# s2#, () #)
 
 instance (VecArrayRW (a:.v), PackedVec (a:.v)) => IArray UArray (Packed (a:.v)) where
     {-# INLINE bounds #-}
