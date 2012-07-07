@@ -28,7 +28,7 @@ import Foreign
 --for UArray instances
 import Data.Array.Base  as Array
 import GHC.ST		( ST(..), runST )
-import GHC.Prim     
+import GHC.Prim
 import GHC.Base         ( Int(..) )
 import GHC.Float	( Float(..), Double(..) )
 import GHC.Word		( Word8(..) )
@@ -85,7 +85,7 @@ type Vec19 a = a :. (Vec18 a)
 
 
 -- | The type constraint @Vec n a v@ infers the vector type @v@ from the
--- length @n@, a type-level natural, and underlying component type @a@.  
+-- length @n@, a type-level natural, and underlying component type @a@.
 -- So @x :: Vec N4 a v => v@ declares @x@ to be a 4-vector of @a@s.
 
 class Vec n a v | n a -> v, v -> n a where
@@ -118,13 +118,13 @@ class VecList a v | v -> a where
   -- distinction between this and 'matFromList', as you might accidentally use
   -- this when you mean that. Because number literals can be converted to
   -- vectors, and matrices are vectors of vectors, the following works
-  -- 
-  -- > fromList [1,2,3,4] :: Mat22 Int 
+  --
+  -- > fromList [1,2,3,4] :: Mat22 Int
   -- > > ((1):.(1):.()):.((2):.(2):.()):.()
   --
   -- even though we meant to do this
   --
-  -- > matFromList [1,2,3,4] :: Mat22 Int 
+  -- > matFromList [1,2,3,4] :: Mat22 Int
   -- > > ((1):.(2):.()):.((3):.(4):.()):.()
   fromList :: [a] -> v
 
@@ -140,7 +140,7 @@ instance VecList a (a:.()) where
   getElem i (a :. _)
     | i == 0    = a
     | otherwise = error "getElem: index out of bounds"
-  setElem i a _ 
+  setElem i a _
     | i == 0    = a :. ()
     | otherwise = error "setElem: index out of bounds"
   {-# INLINE setElem #-}
@@ -162,7 +162,7 @@ instance VecList a (a':.v) => VecList a (a:.(a':.v)) where
 
 -- | get or set a vector element, known at compile
 --time. Use the Nat types to access vector components. For instance, @get n0@
---gets the x component, @set n2 44@ sets the z component to 44. 
+--gets the x component, @set n2 44@ sets the z component to 44.
 
 class Access n a v | v -> a where
   get  :: n -> v -> a
@@ -185,20 +185,20 @@ instance Access n a v => Access (Succ n) a (a :. v) where
 
 -- | The first element.
 
-class Head v a | v -> a  where 
+class Head v a | v -> a  where
   head :: v -> a
 
-instance Head (a :. as) a where 
+instance Head (a :. as) a where
   head (a :. _) = a
   {-# INLINE head #-}
 
 
--- | All but the first element. 
+-- | All but the first element.
 
-class Tail v v_ | v -> v_ where 
+class Tail v v_ | v -> v_ where
   tail :: v -> v_
 
-instance Tail (a :. as) as where 
+instance Tail (a :. as) as where
   tail (_ :. as) = as
   {-# INLINE tail #-}
 
@@ -243,15 +243,15 @@ instance ZipWith a b c (a:.a:.as) (b:.()) (c:.()) where
   zipWith f (x:._) (y:._) = f x y :.()
   {-# INLINE zipWith #-}
 
-instance 
-  ZipWith a b c (a':.u) (b':.v) (c':.w) 
-  => ZipWith a b c (a:.a':.u) (b:.b':.v) (c:.c':.w) 
+instance
+  ZipWith a b c (a':.u) (b':.v) (c':.w)
+  => ZipWith a b c (a:.a':.u) (b:.b':.v) (c:.c':.w)
     where
       zipWith f (x:.u) (y:.v) = f x y :. zipWith f u v
       {-# INLINE zipWith #-}
 
 
--- | Fold a function over a vector. 
+-- | Fold a function over a vector.
 
 class Fold v a | v -> a where
   fold  :: (a -> a -> a) -> v -> a
@@ -259,7 +259,7 @@ class Fold v a | v -> a where
   foldr :: (a -> b -> b) -> b -> v -> b
 
 instance Fold (a:.()) a where
-  fold  _   (a:._) = a 
+  fold  _   (a:._) = a
   foldl f z (a:._) = seq z $ f z a
   foldr f z (a:._) = f a z
   {-# INLINE fold #-}
@@ -274,7 +274,7 @@ instance Fold (a':.u) a => Fold (a:.a':.u) a where
   {-# INLINE foldl #-}
   {-# INLINE foldr #-}
 
--- | Reverse a vector 
+-- | Reverse a vector
 reverse ::  (Reverse' () v v') => v -> v'
 reverse v = reverse' () v
 {-# INLINE reverse #-}
@@ -285,19 +285,19 @@ reverse v = reverse' () v
 -- | Reverse helper function : accumulates the reversed list in its first argument
 class Reverse' p v v' | p v -> v' where
   reverse' :: p -> v -> v'
-  
+
 instance Reverse' p () p where
   reverse' p () = p
   {-# INLINE reverse' #-}
 
 instance Reverse' (a:.p) v v' => Reverse' p (a:.v) v' where
-  reverse' p (a:.v) = reverse' (a:.p) v 
+  reverse' p (a:.v) = reverse' (a:.p) v
   {-# INLINE reverse' #-}
 
 
--- | Append two vectors 
+-- | Append two vectors
 
-class Append v1 v2 v3 | v1 v2 -> v3, v1 v3 -> v2 where 
+class Append v1 v2 v3 | v1 v2 -> v3, v1 v3 -> v2 where
   append :: v1 -> v2 -> v3
 
 instance Append () v v where
@@ -325,7 +325,7 @@ instance Take N0 v () where
   take _ _ = ()
   {-# INLINE take #-}
 
-instance Take n v v' 
+instance Take n v v'
          => Take (Succ n) (a:.v) (a:.v') where
   take _ (a:.v) = a:.(take (undefined::n) v)
   {-# INLINE take #-}
@@ -336,12 +336,12 @@ instance Take n v v'
 
 class Drop n v v' | n v -> v' where
   drop :: n -> v -> v'
- 
+
 instance Drop N0 v v where
   drop _ = id
   {-# INLINE drop #-}
 
-instance (Drop n (a:.v) v') 
+instance (Drop n (a:.v) v')
           => Drop (Succ n) (a:.a:.v) v' where
   drop _ (_:.v) = drop (undefined::n) v
   {-# INLINE drop #-}
@@ -352,7 +352,7 @@ instance (Drop n (a:.v) v')
 class Last v a | v -> a where
   last :: v -> a
 
-instance Last (a:.()) a where 
+instance Last (a:.()) a where
   last (a:._) = a
   {-# INLINE last #-}
 
@@ -361,8 +361,8 @@ instance Last (a':.v) a => Last (a:.a':.v) a where
   {-# INLINE last #-}
 
 
--- | @snoc v a@ appends the element a to the end of v. 
-class Snoc v a v' | v a -> v', v' -> v a where 
+-- | @snoc v a@ appends the element a to the end of v.
+class Snoc v a v' | v a -> v', v' -> v a where
   snoc :: v -> a -> v'
 
 instance Snoc () a (a:.()) where
@@ -406,7 +406,7 @@ minimum x = fold min x
 {-# INLINE minimum #-}
 
 toList ::  (Fold v a) => v -> [a]
-toList = foldr (:) [] 
+toList = foldr (:) []
 {-# INLINE toList #-}
 
 
@@ -459,7 +459,7 @@ matFromList  = matFromLists . groupsOf (nat(undefined::i))
 
 
 
--- Storable instances. 
+-- Storable instances.
 
 instance Storable a => Storable (a:.()) where
   sizeOf _ = sizeOf (undefined::a)
@@ -479,19 +479,19 @@ instance Storable a => Storable (a:.()) where
   {-# INLINE pokeByteOff #-}
   {-# INLINE pokeElemOff #-}
 
-instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v)) 
-  => Storable (a:.a:.v) 
+instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
+  => Storable (a:.a:.v)
   where
   sizeOf _ = sizeOf (undefined::a) + sizeOf (undefined::(a:.v))
   alignment _ = alignment (undefined::a)
-  peek p = 
-    peek (castPtr p) >>= \a -> 
-    peek (castPtr (p`plusPtr`sizeOf(undefined::a))) >>= \v -> 
+  peek p =
+    peek (castPtr p) >>= \a ->
+    peek (castPtr (p`plusPtr`sizeOf(undefined::a))) >>= \v ->
     return (a:.v)
   peekByteOff p o = peek (p`plusPtr`o)
   peekElemOff p i = peek (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v))))
-  poke p (a:.v) = 
-    poke (castPtr p) a >> 
+  poke p (a:.v) =
+    poke (castPtr p) a >>
     poke (castPtr (p`plusPtr`sizeOf(undefined::a))) v
   pokeByteOff p o x = poke (p`plusPtr`o) x
   pokeElemOff p i x = poke (p`plusPtr`(i*sizeOf(undefined::(a:.a:.v)))) x
@@ -506,21 +506,21 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 
 
 -- Num and Fractional instances : All arithmetic is done component-wise and
--- literals construct uniform vectors and matrices. 
+-- literals construct uniform vectors and matrices.
 --
--- The rule is : 
---    If the method is unary, it's a map.  
+-- The rule is :
+--    If the method is unary, it's a map.
 --    If it's binary, it's a zipWith.
 
 instance
     (Eq u, ShowVec u, Num a
-    ,Map a a (a:.u) (a:.u) 
+    ,Map a a (a:.u) (a:.u)
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Vec (Succ l) a (a:.u)
     )
-    => Num (a:.u) 
+    => Num (a:.u)
   where
-    (+) u v = zipWith (+) u v 
+    (+) u v = zipWith (+) u v
     (-) u v = zipWith (-) u v
     (*) u v = zipWith (*) u v
     abs u = map abs u
@@ -534,15 +534,15 @@ instance
     {-# INLINE fromInteger #-}
 
 
-instance 
+instance
     (Eq u, ShowVec u, Fractional a
     ,Ord (a:.u)
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Map a a (a:.u) (a:.u)
     ,Vec (Succ l) a (a:.u)
     ,Show (a:.u)
-    ) 
-    => Fractional (a:.u) 
+    )
+    => Fractional (a:.u)
   where
     (/) u v = zipWith (/) u v
     recip u = map recip u
@@ -566,15 +566,15 @@ class VecArrayRW v where
     vaWrite#  :: MutableByteArray# s# -> Int# -> v -> State# s# -> State# s#
     vaIndex#  :: ByteArray# -> Int# -> v
     vaSizeOf# :: v -> Int# --the size of a vector in bytes
-    vaLength# :: v -> Int# --the length of a vector 
+    vaLength# :: v -> Int# --the length of a vector
     init#     :: v         --the default item when newArray_ is used
 
 
 instance VecArrayRW (Int:.()) where
     vaRead# arr# i# s1# =
-        case readIntArray# arr# i# s1# of 
-          (# s2#, x# #) -> (# s2#, ((I# x#):.()) #) 
-    vaWrite# arr# i# ((I# x#):._) s1# = 
+        case readIntArray# arr# i# s1# of
+          (# s2#, x# #) -> (# s2#, ((I# x#):.()) #)
+    vaWrite# arr# i# ((I# x#):._) s1# =
         case writeIntArray# arr# i# x# s1# of { s2# -> s2# }
     vaIndex# arr# i# = I# (indexIntArray# arr# i#) :. ()
     vaSizeOf# _ = sizeOf# (undefined::Int)
@@ -588,18 +588,18 @@ instance VecArrayRW (Int:.()) where
     {-# INLINE init# #-}
 
 instance (VecArrayRW (Int:.v)) => VecArrayRW (Int:.Int:.v) where
-    vaRead# arr# i# s1# = 
-        case readIntArray# arr# i# s1# of { (# s2#, x# #) -> 
-        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+    vaRead# arr# i# s1# =
+        case readIntArray# arr# i# s1# of { (# s2#, x# #) ->
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) ->
         (# s3#, ((I# x#):.v) #) }}
-    vaWrite# arr# i# ((I# x#):.v) s1# = 
-        case writeIntArray# arr# i# x# s1# of { s2# -> 
+    vaWrite# arr# i# ((I# x#):.v) s1# =
+        case writeIntArray# arr# i# x# s1# of { s2# ->
         case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
-    vaIndex# arr# i# = I# (indexIntArray# arr# i#) :. 
+    vaIndex# arr# i# = I# (indexIntArray# arr# i#) :.
                        vaIndex# arr# (i# +# 1#)
     vaSizeOf# _ = sizeOf# (undefined::Int) +# vaSizeOf# (undefined::Int:.v)
     vaLength# _ = 1# +# vaLength# (undefined::Int:.v)
-    init# = 0 :. init# 
+    init# = 0 :. init#
     {-# INLINE vaRead# #-}
     {-# INLINE vaWrite# #-}
     {-# INLINE vaIndex# #-}
@@ -609,9 +609,9 @@ instance (VecArrayRW (Int:.v)) => VecArrayRW (Int:.Int:.v) where
 
 instance VecArrayRW (Double:.()) where
     vaRead# arr# i# s1# =
-        case readDoubleArray# arr# i# s1# of 
-          (# s2#, x# #) -> (# s2#, ((D# x#):.()) #) 
-    vaWrite# arr# i# ((D# x#):._) s1# = 
+        case readDoubleArray# arr# i# s1# of
+          (# s2#, x# #) -> (# s2#, ((D# x#):.()) #)
+    vaWrite# arr# i# ((D# x#):._) s1# =
         case writeDoubleArray# arr# i# x# s1# of { s2# -> s2# }
     vaIndex# arr# i# = D# (indexDoubleArray# arr# i#) :. ()
     vaSizeOf# _ = sizeOf# (undefined::Double)
@@ -625,18 +625,18 @@ instance VecArrayRW (Double:.()) where
     {-# INLINE init# #-}
 
 instance (VecArrayRW (Double:.v)) => VecArrayRW (Double:.Double:.v) where
-    vaRead# arr# i# s1# = 
-        case readDoubleArray# arr# i# s1# of { (# s2#, x# #) -> 
-        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+    vaRead# arr# i# s1# =
+        case readDoubleArray# arr# i# s1# of { (# s2#, x# #) ->
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) ->
         (# s3#, ((D# x#):.v) #) }}
-    vaWrite# arr# i# ((D# x#):.v) s1# = 
-        case writeDoubleArray# arr# i# x# s1# of { s2# -> 
+    vaWrite# arr# i# ((D# x#):.v) s1# =
+        case writeDoubleArray# arr# i# x# s1# of { s2# ->
         case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
-    vaIndex# arr# i# = D# (indexDoubleArray# arr# i#) :. 
+    vaIndex# arr# i# = D# (indexDoubleArray# arr# i#) :.
                        vaIndex# arr# (i# +# 1#)
     vaSizeOf# _ = sizeOf# (undefined::Double) +# vaSizeOf# (undefined::Double:.v)
     vaLength# _ = 1# +# vaLength# (undefined::Double:.v)
-    init# = 0 :. init# 
+    init# = 0 :. init#
     {-# INLINE vaRead# #-}
     {-# INLINE vaWrite# #-}
     {-# INLINE vaIndex# #-}
@@ -647,9 +647,9 @@ instance (VecArrayRW (Double:.v)) => VecArrayRW (Double:.Double:.v) where
 
 instance VecArrayRW (Float:.()) where
     vaRead# arr# i# s1# =
-        case readFloatArray# arr# i# s1# of 
-          (# s2#, x# #) -> (# s2#, ((F# x#):.()) #) 
-    vaWrite# arr# i# ((F# x#):._) s1# = 
+        case readFloatArray# arr# i# s1# of
+          (# s2#, x# #) -> (# s2#, ((F# x#):.()) #)
+    vaWrite# arr# i# ((F# x#):._) s1# =
         case writeFloatArray# arr# i# x# s1# of { s2# -> s2# }
     vaIndex# arr# i# = F# (indexFloatArray# arr# i#) :. ()
     vaSizeOf# _ = sizeOf# (undefined::Float)
@@ -663,18 +663,18 @@ instance VecArrayRW (Float:.()) where
     {-# INLINE init# #-}
 
 instance (VecArrayRW (Float:.v)) => VecArrayRW (Float:.Float:.v) where
-    vaRead# arr# i# s1# = 
-        case readFloatArray# arr# i# s1# of { (# s2#, x# #) -> 
-        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+    vaRead# arr# i# s1# =
+        case readFloatArray# arr# i# s1# of { (# s2#, x# #) ->
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) ->
         (# s3#, ((F# x#):.v) #) }}
-    vaWrite# arr# i# ((F# x#):.v) s1# = 
-        case writeFloatArray# arr# i# x# s1# of { s2# -> 
+    vaWrite# arr# i# ((F# x#):.v) s1# =
+        case writeFloatArray# arr# i# x# s1# of { s2# ->
         case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
-    vaIndex# arr# i# = F# (indexFloatArray# arr# i#) :. 
+    vaIndex# arr# i# = F# (indexFloatArray# arr# i#) :.
                        vaIndex# arr# (i# +# 1#)
     vaSizeOf# _ = sizeOf# (undefined::Float) +# vaSizeOf# (undefined::Float:.v)
     vaLength# _ = 1# +# vaLength# (undefined::Float:.v)
-    init# = 0 :. init# 
+    init# = 0 :. init#
     {-# INLINE vaRead# #-}
     {-# INLINE vaWrite# #-}
     {-# INLINE vaIndex# #-}
@@ -685,9 +685,9 @@ instance (VecArrayRW (Float:.v)) => VecArrayRW (Float:.Float:.v) where
 
 instance VecArrayRW (Word8:.()) where
     vaRead# arr# i# s1# =
-        case readWord8Array# arr# i# s1# of 
-          (# s2#, x# #) -> (# s2#, ((W8# x#):.()) #) 
-    vaWrite# arr# i# ((W8# x#):._) s1# = 
+        case readWord8Array# arr# i# s1# of
+          (# s2#, x# #) -> (# s2#, ((W8# x#):.()) #)
+    vaWrite# arr# i# ((W8# x#):._) s1# =
         case writeWord8Array# arr# i# x# s1# of { s2# -> s2# }
     vaIndex# arr# i# = W8# (indexWord8Array# arr# i#) :. ()
     vaSizeOf# _ = sizeOf# (undefined::Word8)
@@ -701,18 +701,18 @@ instance VecArrayRW (Word8:.()) where
     {-# INLINE init# #-}
 
 instance (VecArrayRW (Word8:.v)) => VecArrayRW (Word8:.Word8:.v) where
-    vaRead# arr# i# s1# = 
-        case readWord8Array# arr# i# s1# of { (# s2#, x# #) -> 
-        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) -> 
+    vaRead# arr# i# s1# =
+        case readWord8Array# arr# i# s1# of { (# s2#, x# #) ->
+        case vaRead# arr# (i# +# 1#) s2# of { (# s3#, v  #) ->
         (# s3#, ((W8# x#):.v) #) }}
-    vaWrite# arr# i# ((W8# x#):.v) s1# = 
-        case writeWord8Array# arr# i# x# s1# of { s2# -> 
+    vaWrite# arr# i# ((W8# x#):.v) s1# =
+        case writeWord8Array# arr# i# x# s1# of { s2# ->
         case vaWrite# arr# (i# +# 1#) v s2# of { s3# -> s3# }}
-    vaIndex# arr# i# = W8# (indexWord8Array# arr# i#) :. 
+    vaIndex# arr# i# = W8# (indexWord8Array# arr# i#) :.
                        vaIndex# arr# (i# +# 1#)
     vaSizeOf# _ = sizeOf# (undefined::Word8) +# vaSizeOf# (undefined::Word8:.v)
     vaLength# _ = 1# +# vaLength# (undefined::Word8:.v)
-    init# = 0 :. init# 
+    init# = 0 :. init#
     {-# INLINE vaRead# #-}
     {-# INLINE vaWrite# #-}
     {-# INLINE vaIndex# #-}
@@ -730,16 +730,16 @@ instance VecArrayRW (a:.v) => MArray (STUArray s) (a:.v) (ST s) where
     {-# INLINE getNumElements #-}
     getNumElements (STUArray _ _ n _) = return n
     {-# INLINE unsafeNewArray_ #-}
-    unsafeNewArray_ (l,u) = 
+    unsafeNewArray_ (l,u) =
         unsafeNewArraySTUArray_ (l,u) (\x# -> x# *# vaSizeOf# (undefined::a:.v) )
     {-# INLINE newArray_ #-}
     newArray_ arrBounds = Array.newArray arrBounds init#
     {-# INLINE unsafeRead #-}
-    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# -> 
-        vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1# 
+    unsafeRead (STUArray _ _ _ marr#) (I# i#) = ST $ \s1# ->
+        vaRead# marr# (vaLength# (undefined::a:.v) *# i#) s1#
     {-# INLINE unsafeWrite #-}
     unsafeWrite (STUArray _ _ _ marr#) (I# i#) v = ST $ \s1# ->
-        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) v s1# of s2# -> (# s2#, () #) 
+        case vaWrite# marr# (vaLength# (undefined::a:.v) *# i#) v s1# of s2# -> (# s2#, () #)
 
 instance VecArrayRW (a:.v) => IArray UArray (a:.v) where
     {-# INLINE bounds #-}
@@ -749,13 +749,13 @@ instance VecArrayRW (a:.v) => IArray UArray (a:.v) where
     {-# INLINE unsafeArray #-}
     unsafeArray lu ies = runST (unsafeArrayUArray lu ies init# )
     {-# INLINE unsafeAt #-}
-    unsafeAt (UArray _ _ _ arr#) (I# i#) = 
+    unsafeAt (UArray _ _ _ arr#) (I# i#) =
         vaIndex# arr# (vaLength# (undefined::a:.v) *# i#)
     {-# INLINE unsafeReplace #-}
     unsafeReplace arr ies = runST (unsafeReplaceUArray arr ies)
     {-# INLINE unsafeAccum #-}
     unsafeAccum f arr ies = runST (unsafeAccumUArray f arr ies)
     {-# INLINE unsafeAccumArray #-}
-    unsafeAccumArray f initialValue lu ies = 
+    unsafeAccumArray f initialValue lu ies =
         runST (unsafeAccumArrayUArray f initialValue lu ies)
 
