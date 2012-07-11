@@ -489,13 +489,10 @@ mapFst f (a,b) = (f a,b)
 {-# INLINE mapFst #-}
 
 
-class (Eq a, Num a) => NearZero a where
+class Num a => NearZero a where
   -- | @nearZero x@ should be true when x is close enough to 0 to cause
   -- significant error in division.
   nearZero :: a -> Bool
-  nearZero 0 = True
-  nearZero _ = False
-  {-# INLINE nearZero #-}
 
 instance NearZero Float where
   nearZero x = abs x < 1e-6
@@ -505,8 +502,11 @@ instance NearZero Double where
   nearZero x = abs x < 1e-14
   {-# INLINE nearZero #-}
 
-instance NearZero Rational
 
+instance NearZero Rational where
+  nearZero 0 = True
+  nearZero _ = False
+  {-# INLINE nearZero #-}
 
 
 
@@ -523,7 +523,7 @@ instance Pivot1 a () where
   pivot1 _ = Nothing
 
 instance
-    ( Show a, Fractional a, NearZero a
+    ( Fractional a, NearZero a
     ) => Pivot1 a ((a:.()):.())
   where
     pivot1 ((p:._):._)

@@ -27,11 +27,11 @@ import Foreign
 
 --for UArray instances
 import Data.Array.Base  as Array
-import GHC.ST		( ST(..), runST )
+import GHC.ST        ( ST(..), runST )
 import GHC.Prim
 import GHC.Base         ( Int(..) )
-import GHC.Float	( Float(..), Double(..) )
-import GHC.Word		( Word8(..) )
+import GHC.Float    ( Float(..), Double(..) )
+import GHC.Word        ( Word8(..) )
 
 
 -- | The vector constructor. @(:.)@ for vectors is like @(:)@ for lists, and
@@ -513,7 +513,7 @@ instance (Vec (Succ (Succ n)) a (a:.a:.v), Storable a, Storable (a:.v))
 --    If it's binary, it's a zipWith.
 
 instance
-    (Eq u, ShowVec u, Num a
+    (Num a
     ,Map a a (a:.u) (a:.u)
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Vec (Succ l) a (a:.u)
@@ -535,12 +535,11 @@ instance
 
 
 instance
-    (Eq u, ShowVec u, Fractional a
+    (Fractional a
     ,Ord (a:.u)
     ,ZipWith a a a (a:.u) (a:.u) (a:.u)
     ,Map a a (a:.u) (a:.u)
-    ,Vec (Succ l) a (a:.u)
-    ,Show (a:.u)
+    ,Vec (Succ l) a (a:.u)    
     )
     => Fractional (a:.u)
   where
