@@ -60,13 +60,13 @@ import Data.Int
 import Foreign
 
 import Data.Array.Base  as Array
-import GHC.ST		( ST(..), runST )
+import GHC.ST        ( ST(..), runST )
 import GHC.Prim
 import GHC.Base         ( Int(..) )
-import GHC.Word		( Word(..) )
-import GHC.Float	( Float(..), Double(..) )
-import GHC.Int		( Int8(..),  Int16(..),  Int32(..),  Int64(..) )
-import GHC.Word		( Word8(..), Word16(..), Word32(..), Word64(..) )
+import GHC.Word        ( Word(..) )
+import GHC.Float    ( Float(..), Double(..) )
+import GHC.Int        ( Int8(..),  Int16(..),  Int32(..),  Int64(..) )
+import GHC.Word        ( Word8(..), Word16(..), Word32(..), Word64(..) )
 
 
 -- | PackedVec class : relates a vector type to its space-optimized
