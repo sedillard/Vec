@@ -816,7 +816,7 @@ rotationQuat (x:.y:.z:.w:.()) =
                  0, 0, 0, 1]
 
 -- | A 4x4 rotation matrix for turning toward a point. Useful for targeting a camera to a specific point.
-rotationLookAt :: (Eq a, Show a, Floating a)
+rotationLookAt :: Floating a
                => Vec3 a -- ^ The up direction, not necessary unit length or perpendicular to the view vector
                -> Vec3 a -- ^ The viewers position
                -> Vec3 a -- ^ The point to look at
