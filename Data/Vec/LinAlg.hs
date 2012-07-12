@@ -1,6 +1,5 @@
 {- Copyright (c) 2008, Scott E. Dillard. All rights reserved. -}
 
-{-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -44,6 +43,17 @@ module Data.Vec.LinAlg
   ,invert
   ,invertAndDet
   ,solve
+  ,translation
+  ,rotationX
+  ,rotationY
+  ,rotationZ
+  ,rotationVec
+  ,rotationEuler
+  ,rotationQuat
+  ,rotationLookAt
+  ,scaling
+  ,perspective
+  ,orthogonal  
   ) where
 
 import Prelude hiding (map,zipWith,foldl,foldr,reverse,take,drop,
@@ -73,7 +83,7 @@ norm v = sqrt (dot v v)
 -- | @normalize v@ is a unit vector in the direction of @v@. @v@ is assumed
 -- non-null.
 normalize :: (Floating a, Num v, Fold v a, Map a a v v) => v -> v
-normalize v = map (/(norm v)) v
+normalize v = map (/ norm v) v
 {-# INLINE normalize #-}
 
 -- | 3d cross product.
@@ -149,7 +159,7 @@ translate ::
   ) => v -> m -> m
 translate v m =
   case reverse (transpose m) of
-    (h:.t) -> transpose (reverse (((homVec v) + h) :. t))
+    (h:.t) -> transpose (reverse ((homVec v + h) :. t))
 {-# INLINE translate #-}
 
 -- | get the @n@-th column as a vector. @n@ is a type-level natural.
@@ -159,7 +169,7 @@ column n = get n . transpose
 
 -- | get the @n@-th row as a vector. @n@ is a type-level natural.
 row ::  (Access n a v) => n -> v -> a
-row n = get n
+row = get
 {-# INLINE column #-}
 
 
@@ -213,7 +223,7 @@ instance
     => Transpose' ((x:.xs):.(xss_h:.xss_t)) ((x:.xs'):.xss')
   where
     transpose' ((x:.xs):.xss) =
-      (x :. (map head xss)) :. (transpose' (xs :. (map tail xss) :: (xs:.xss_)))
+      (x :. map head xss) :. transpose' (xs :. map tail xss :: (xs :. xss_))
     {-# INLINE transpose' #-}
 
 
@@ -225,7 +235,7 @@ class SetDiagonal v m | m -> v, v -> m where
   setDiagonal :: v -> m -> m
 
 instance (Vec n a v, Vec n r m, SetDiagonal' N0 v m) => SetDiagonal v m where
-  setDiagonal v m = setDiagonal' (undefined::N0) v m
+  setDiagonal = setDiagonal' (undefined :: N0)
   {-# INLINE setDiagonal #-}
 
 class SetDiagonal' n v m  where
@@ -241,7 +251,7 @@ instance
     ) => SetDiagonal' n (a:.v) (r:.m)
   where
     setDiagonal' _ (a:.v) (r:.m) =
-       (set (undefined::n) a r) :. (setDiagonal' (undefined::Succ n) v m)
+       set (undefined :: n) a r :. setDiagonal' (undefined :: Succ n) v m
     {-# INLINE setDiagonal' #-}
 
 
@@ -251,7 +261,7 @@ class GetDiagonal m v | m -> v, v -> m where
   getDiagonal :: m -> v
 
 instance (Vec n a v, Vec n v m, GetDiagonal' N0 () m v) => GetDiagonal m v where
-  getDiagonal m = getDiagonal' (undefined::N0) () m
+  getDiagonal = getDiagonal' (undefined :: N0) ()
   {-# INLINE getDiagonal #-}
 
 class GetDiagonal' n p m v where
@@ -262,7 +272,7 @@ instance
     ,Append p (a:.()) (a:.p)
     ) => GetDiagonal' n p (r:.()) (a:.p)
   where
-    getDiagonal' _ p (r:.()) = append p ((get (undefined::n) r) :. ())
+    getDiagonal' _ p (r:.()) = append p (get (undefined :: n) r :. ())
     {-# INLINE getDiagonal' #-}
 
 instance
@@ -273,7 +283,7 @@ instance
     => GetDiagonal' n p (r:.r:.m) v
   where
     getDiagonal' _ p (r:.m) =
-      getDiagonal' (undefined::Succ n) (append p ((get (undefined::n) r):.())) m
+      getDiagonal' (undefined::Succ n) (append p (get (undefined :: n) r :. ())) m
     {-# INLINE getDiagonal' #-}
 
 
@@ -287,7 +297,7 @@ scale ::
   , Vec n r m
   , SetDiagonal' N0 r m
   ) => r -> m -> m
-scale s m = setDiagonal (s * (getDiagonal m)) m
+scale s m = setDiagonal (s * getDiagonal m) m
 {-# INLINE scale #-}
 
 
@@ -347,7 +357,7 @@ instance
   ) => Det' ((a:.a:.v):.(a:.a:.v):.vs) a                    -- et voila
   where
   det' m =
-    sum $ (negateOdds $ map head m) * map det' (dropConsec $ map tail m)
+    sum $ negateOdds (map head m) * map det' (dropConsec $ map tail m)
 
 
 -- DropConsec: Drop consecutive elements, collecting the results. Given an
@@ -368,14 +378,14 @@ instance
   ,DropConsec' () v vv
   ) => DropConsec v vv
   where
-    dropConsec v = dropConsec' () v
+    dropConsec = dropConsec' ()
     {-# INLINE dropConsec #-}
 
 class DropConsec' p v vv  where
   dropConsec' :: p -> v -> vv
 
 instance DropConsec' p (a:.()) (p:.()) where
-  dropConsec' p (a:.()) = (p:.())
+  dropConsec' p (a:.()) = p :. ()
   {-# INLINE dropConsec' #-}
 
 instance
@@ -386,7 +396,7 @@ instance
     => DropConsec' p (a:.a:.v) (x:.z)
   where
     dropConsec' p (a:.v) =
-      (append p v) :. (dropConsec' (append p (a:.())) v)
+      append p v :. dropConsec' (append p (a :. ())) v
     {-# INLINE dropConsec' #-}
 
 
@@ -451,7 +461,7 @@ instance
     => ReplConsec' a p (a:.v) (x:.z)
   where
     replConsec' r p (a:.v) =
-      (append p (r:.v)) :. (replConsec' r (append p (a :. ())) v)
+      append p (r :. v) :. replConsec' r (append p (a :. ())) v
     {-# INLINE replConsec' #-}
 
 
@@ -475,7 +485,7 @@ cramer'sRule ::
   ,Det' a a1
   ) => m -> v -> v
 cramer'sRule m b =
-  case map (\m' -> (det' m')/(det' m))
+  case map (\m' -> det' m' / det' m)
            (transpose (zipWith replConsec b m))
     of b' -> b' `asTypeOf` b
 {-# INLINE cramer'sRule #-}
@@ -538,7 +548,7 @@ instance
   where
     pivot1 ((p:.r):._)
       | nearZero p = Nothing
-      | otherwise  = Just ((1 :. (map (/p) r)):.(), p)
+      | otherwise  = Just ((1 :. map (/ p) r):.(), p)
     {-# INLINE pivot1 #-}
 
 instance
@@ -551,7 +561,7 @@ instance
   where
     pivot1 (row@(p:._):.rows)
       | nearZero p = pivot1 rows >>= \(r:.rs,p)-> Just(r:.row:.rs,p)
-      | otherwise  = Just ( first:.(map add rows) , p)
+      | otherwise  = Just ( first :. map add rows , p)
           where first        = map (/p) row
                 add r@(x:._) = zipWith (-) r . map (*x) $ first
     {-# INLINE pivot1 #-}
@@ -580,7 +590,7 @@ instance
   where
     pivot m =
       mplus (pivot1 m)
-            (pivot (map tail m) >>= return . mapFst (map (0:.)) )
+            (liftM (mapFst (map (0 :.))) (pivot (map tail m)) )
     {-# INLINE pivot #-}
 
 
@@ -615,7 +625,7 @@ instance
     gaussElim m =
       flip (maybe (m,1)) (pivot m) $ \(row:.rows,p) ->
         case gaussElim (map tail rows)
-          of (rows',p') -> ( row:.(map (0:.) rows') , p*p')
+          of (rows',p') -> ( row :. map (0 :.) rows' , p*p')
     {-# INLINE gaussElim #-}
 
 
@@ -645,8 +655,7 @@ instance
     backSubstitute m@(r@(rh:.rt):.rs)
       | nearZero (1-rh) =
           liftM (map (0:.)) (backSubstitute . map tail $ rs) >>= \rs' ->
-            return . (:.rs') . foldl (\v (a,w) -> sub v a w) r $
-              zipWith (,) rt rs'
+            return . (:. rs') . foldl (\ v (a, w) -> sub v a w) r $ zipWith (,) rt rs'
       | otherwise = Nothing -- rank deficient
           where sub v a = zipWith (-) v . map (*a)
     {-# INLINE backSubstitute #-}
@@ -676,8 +685,7 @@ instance
   where
     backSubstitute' (r@(_:.rt):.rs) =
       case map (0:.) (backSubstitute' . map tail $ rs)
-        of rs' -> (:.rs') $ foldl (\ v (a,w) -> sub v a w) r
-                              (zipWith (,) rt rs')
+        of rs' -> (:.rs') $ foldl (\ v (a,w) -> sub v a w) r (zipWith (,) rt rs')
       where sub v a = zipWith (-) v . map (*a)
     {-# INLINE backSubstitute' #-}
 
@@ -696,8 +704,8 @@ invert :: forall n a r m r' m'.
   , BackSubstitute m'
   ) => m -> Maybe m
 invert m =
-  return i >>= backSubstitute . fst . gaussElim . zipWith append m
-           >>= return . map dropn
+  liftM (map dropn)
+  ((backSubstitute . fst . gaussElim . zipWith append m) i)
   where dropn = drop (undefined::n)
         i = identity :: m
 {-# INLINE invert #-}
@@ -739,12 +747,117 @@ solve :: forall n a v r m r' m'.
   , BackSubstitute m'
   ) => m -> r -> Maybe r
 solve m v =
-  return v >>= backSubstitute . fst . gaussElim . zipWith snoc m
-           >>= return . map (head . drop (undefined::n))
+  liftM (map (head . drop (undefined :: n)))
+  ((backSubstitute . fst . gaussElim . zipWith snoc m) v)
 {-# INLINE solve #-}
 
 
 
+
+-- | A 4x4 translation matrix
+translation :: Num a => Vec3 a -> Mat44 a
+translation = flip translate identity
+
+-- | A 4x4 rotation matrix for a rotation around the X axis
+rotationX :: Floating a
+          => a -- ^ The angle in radians
+          -> Mat44 a
+rotationX a  = matFromList [1, 0, 0, 0,
+                            0, cos a, -sin a, 0,
+                            0, sin a, cos a, 0,
+                            0, 0, 0, 1]
+
+-- | A 4x4 rotation matrix for a rotation around the Y axis
+rotationY :: Floating a
+          => a -- ^ The angle in radians
+          -> Mat44 a
+rotationY a  = matFromList [cos a, 0, sin a, 0,
+                            0, 1, 0, 0,
+                            -sin a, 0, cos a, 0,
+                            0, 0, 0, 1]
+
+-- | A 4x4 rotation matrix for a rotation around the Z axis
+rotationZ :: Floating a
+          => a -- ^ The angle in radians
+          -> Mat44 a
+rotationZ a  = matFromList [cos a, -sin a, 0, 0,
+                            sin a, cos a, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1]
+
+-- | A 4x4 rotation matrix for a rotation around an arbitrary normalized vector
+rotationVec :: Floating a
+            => Vec3 a  -- ^ The normalized vector around which the rotation goes
+            -> a  -- ^ The angle in radians
+            -> Mat44 a
+rotationVec (x:.y:.z:.()) a =
+    matFromList [x^2+(1-x^2)*c, x*y*(1-c)-z*s, x*z*(1-c)+y*s, 0,
+                 x*y*(1-c)+z*s, y^2+(1-y^2)*c, y*z*(1-c)-x*s, 0,
+                 x*z*(1-c)-y*s, y*z*(1-c)+x*s, z^2+(1-z^2)*c, 0,
+                 0, 0, 0, 1]
+    where c = cos a
+          s = sin a
+
+-- | A 4x4 rotation matrix from the euler angles yaw pitch and roll. Could be useful in e.g.
+--   first person shooter games,
+rotationEuler :: Floating a
+              => Vec3 a -- rotation around x, y and z respectively
+              -> Mat44 a
+rotationEuler (x:.y:.z:.()) = rotationZ z `multmm` rotationY y `multmm` rotationX x
+
+-- | A 4x4 rotation matrix from a normalized quaternion. Useful for most free flying rotations, such as airplanes.
+rotationQuat :: Num a
+             => Vec4 a -- ^ The quaternion with the real part (w) last
+             ->  Mat44 a
+rotationQuat (x:.y:.z:.w:.()) =
+    matFromList [1-2*y^2-2*z^2, 2*(x*y-z*w), 2*(x*z+y*w), 0,
+                 2*(x*y+z*w), 1-2*x^2-2*z^2, 2*(y*z-x*w), 0,
+                 2*(x*z-y*w), 2*(x*w+y*z), 1-2*x^2-2*y^2, 0,
+                 0, 0, 0, 1]
+
+-- | A 4x4 rotation matrix for turning toward a point. Useful for targeting a camera to a specific point.
+rotationLookAt :: (Eq a, Show a, Floating a)
+               => Vec3 a -- ^ The up direction, not necessary unit length or perpendicular to the view vector
+               -> Vec3 a -- ^ The viewers position
+               -> Vec3 a -- ^ The point to look at
+               -> Mat44 a
+rotationLookAt up' pos target = transpose $ homVec left :. homVec up :. homVec forward :. homPoint 0 :. ()
+    where
+        forward = normalize $ pos - target
+        left = normalize $ up' `cross` forward
+        up = forward `cross`left
+
+-- | A 4x4 scaling matrix
+scaling :: Num a => Vec3 a -> Mat44 a
+scaling = diagonal . homPoint
+
+-- | A perspective projection matrix for a right handed coordinate system looking down negative z. This will project far plane to @z = +1@ and near plane to @z = -1@, i.e. into a left handed system.
+perspective :: Floating a
+            => a -- ^ Near plane clipping distance (always positive)
+            -> a -- ^ Far plane clipping distance (always positive)
+            -> a -- ^ Field of view of the y axis, in radians
+            -> a -- ^ Aspect ratio, i.e. screen's width\/height
+            -> Mat44 a
+perspective n f fovy aspect = matFromList [2*n/(r-l), 0, -(r+l)/(r-l), 0,
+                                           0, 2*n/(t-b), (t+b)/(t-b), 0,
+                                           0, 0, -(f+n)/(f-n), -2*f*n/(f-n),
+                                           0,0,-1,0]
+    where
+        t = n*tan(fovy/2)
+        b = -t
+        r = aspect*t
+        l = -r
+
+-- | An orthogonal projection matrix for a right handed coordinate system looking down negative z. This will project far plane to @z = +1@ and near plane to @z = -1@, i.e. into a left handed system.
+orthogonal :: Fractional a
+           => a -- ^ Near plane clipping distance
+           -> a -- ^ Far plane clipping distance
+           -> Vec2 a -- ^ The size of the view (center aligned around origo)
+           -> Mat44 a
+orthogonal n f (w:.h:.()) = matFromList [2/w, 0, 0, 0,
+                                         0, 2/h, 0, 0,
+                                         0, 0, 2/(f-n), -(f+n)/(f-n),
+                                         0, 0, 0, 1]
 
 
 

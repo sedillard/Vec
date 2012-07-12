@@ -123,17 +123,10 @@ templatized geometry library (C++), by Oliver Kreylos :
   <http://graphics.cs.ucdavis.edu/~okreylos/ResDev/Geometry/index.html>
 -}
 
-module Data.Vec 
-  (module Data.Vec.Base
-  ,module Data.Vec.LinAlg
-  ,module Data.Vec.Packed
-  ,module Data.Vec.Nat
-  )
-where
-
-import Data.Vec.Base
-import Data.Vec.LinAlg
-import Data.Vec.Packed
-import Data.Vec.Nat
+module Data.Vec (module X) where
+import Data.Vec.Base as X
+import Data.Vec.LinAlg as X
+import Data.Vec.Packed as X
+import Data.Vec.Nat as X
 
 
