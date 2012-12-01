@@ -66,23 +66,23 @@ import Control.Monad
 import Data.Maybe
 
 -- | dot \/ inner \/ scalar product
-dot ::  (Num a, Num v, Fold v a) => v -> v -> a
-dot u v = sum (u*v)
+dot ::  (Num a, Fold v a, ZipWith a a a v v v) => v -> v -> a
+dot u v = fold (+) (zipWith (*) u v)
 {-# INLINE dot #-}
 
 -- | vector norm, squared
-normSq ::  (Num a, Num v, Fold v a) => v -> a
+normSq ::  (Num a, Num v, Fold v a, ZipWith a a a v v v) => v -> a
 normSq v = dot v v
 {-# INLINE normSq #-}
 
 -- | vector \/ L2 \/ Euclidean norm
-norm ::  (Num v, Floating a, Fold v a) => v -> a
+norm ::  (Num v, Floating a, Fold v a, ZipWith a a a v v v) => v -> a
 norm v = sqrt (dot v v)
 {-# INLINE norm #-}
 
 -- | @normalize v@ is a unit vector in the direction of @v@. @v@ is assumed
 -- non-null.
-normalize :: (Floating a, Num v, Fold v a, Map a a v v) => v -> v
+normalize :: (Floating a, Num v, Fold v a, Map a a v v, ZipWith a a a v v v) => v -> v
 normalize v = map (/ norm v) v
 {-# INLINE normalize #-}
 
@@ -119,6 +119,7 @@ multvm ::
   ( Transpose m mt
   , Map v a mt v'
   , Fold v a
+  , ZipWith a a a v v v
   , Num a
   , Num v
   ) => v -> m -> v'
@@ -130,6 +131,7 @@ multmv ::
   ( Map v a m v'
   , Num v
   , Fold v a
+  , ZipWith a a a v v v
   , Num a
   ) => m -> v -> v'
 multmv m v = map (dot v) m
@@ -141,6 +143,7 @@ multmm ::
   ,Map v a b v'
   ,Transpose m2 b
   ,Fold v a
+  ,ZipWith a a a v v v
   ,Num v
   ,Num a
   ) => m1 -> m2 -> m3
