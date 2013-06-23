@@ -58,6 +58,7 @@ import Data.Vec.LinAlg --just for haddock
 import Data.Word
 import Data.Int
 import Foreign
+import Foreign.C
 
 import Data.Array.Base  as Array
 import GHC.ST        ( ST(..), runST )
@@ -84,8 +85,6 @@ class PackedVec v where
         pack (unpack x) = x;
       "Vec unpack/pack" forall x.
         unpack (pack x) = x;  #-}
-
-
 
 
 instance PackedVec (Vec2 Bool) where
@@ -211,6 +210,72 @@ instance PackedVec (Vec4 Double) where
 type Vec2D = Packed (Vec2 Double)
 type Vec3D = Packed (Vec3 Double)
 type Vec4D = Packed (Vec4 Double)
+
+
+
+
+
+instance PackedVec (Vec2 CFloat) where
+    data Packed (Vec2 CFloat) = Vec2CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CF x y
+    unpack (Vec2CF x y) = x:.y:.()
+
+instance PackedVec (Vec3 CFloat) where
+    data Packed (Vec3 CFloat) = Vec3CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CF x y z
+    unpack (Vec3CF x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CFloat) where
+    data Packed (Vec4 CFloat) = Vec4CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CF x y z w
+    unpack (Vec4CF x y z w) = x:.y:.z:.w:.()
+
+type Vec2CF = Packed (Vec2 CFloat)
+type Vec3CF = Packed (Vec3 CFloat)
+type Vec4CF = Packed (Vec4 CFloat)
+
+
+
+
+instance PackedVec (Vec2 CDouble) where
+    data Packed (Vec2 CDouble) = Vec2CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CD x y
+    unpack (Vec2CD x y) = x:.y:.()
+
+instance PackedVec (Vec3 CDouble) where
+    data Packed (Vec3 CDouble) = Vec3CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CD x y z
+    unpack (Vec3CD x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CDouble) where
+    data Packed (Vec4 CDouble) = Vec4CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CD x y z w
+    unpack (Vec4CD x y z w) = x:.y:.z:.w:.()
+
+type Vec2CD = Packed (Vec2 CDouble)
+type Vec3CD = Packed (Vec3 CDouble)
+type Vec4CD = Packed (Vec4 CDouble)
+
+
+
 
 type Mat22D = Vec2 (Vec2D)
 type Mat23D = Vec2 (Vec3D)
