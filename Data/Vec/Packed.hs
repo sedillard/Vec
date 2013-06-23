@@ -90,6 +90,7 @@ class PackedVec v where
 
 instance PackedVec (Vec2 Bool) where
   data Packed (Vec2 Bool) = Vec2B !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2B a b
   unpack (Vec2B a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -97,6 +98,7 @@ instance PackedVec (Vec2 Bool) where
 
 instance PackedVec (Vec3 Bool) where
   data Packed (Vec3 Bool) = Vec3B !Bool !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3B a b c
   unpack (Vec3B a b c) = a:.b:.c:.()
   {-# INLINE pack #-}
@@ -104,6 +106,7 @@ instance PackedVec (Vec3 Bool) where
 
 instance PackedVec (Vec4 Bool) where
   data Packed (Vec4 Bool) = Vec4B !Bool !Bool !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4B a b c d
   unpack (Vec4B a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -119,6 +122,7 @@ type Vec4B = Packed (Vec4 Bool)
 
 instance PackedVec (Vec2 Int) where
   data Packed (Vec2 Int) = Vec2I {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2I a b
   unpack (Vec2I a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -126,6 +130,7 @@ instance PackedVec (Vec2 Int) where
 
 instance PackedVec (Vec3 Int) where
   data Packed (Vec3 Int) = Vec3I {-#UNPACK#-} !Int {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3I a b c;
   unpack (Vec3I a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -133,6 +138,7 @@ instance PackedVec (Vec3 Int) where
 
 instance PackedVec (Vec4 Int) where
   data Packed (Vec4 Int) = Vec4I {-#UNPACK#-} !Int {-#UNPACK#-} !Int  {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4I a b c d
   unpack (Vec4I a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -148,6 +154,7 @@ type Vec4I = Packed (Vec4 Int)
 
 instance PackedVec (Vec2 Float) where
   data Packed (Vec2 Float) = Vec2F {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2F a b
   unpack (Vec2F a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -155,6 +162,7 @@ instance PackedVec (Vec2 Float) where
 
 instance PackedVec (Vec3 Float) where
   data Packed (Vec3 Float) = Vec3F {-#UNPACK#-} !Float {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3F a b c;
   unpack (Vec3F a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -162,6 +170,7 @@ instance PackedVec (Vec3 Float) where
 
 instance PackedVec (Vec4 Float) where
   data Packed (Vec4 Float) = Vec4F {-#UNPACK#-} !Float {-#UNPACK#-} !Float  {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4F a b c d
   unpack (Vec4F a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -177,6 +186,7 @@ type Vec4F = Packed (Vec4 Float)
 
 instance PackedVec (Vec2 Double) where
   data Packed (Vec2 Double) = Vec2D {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2D a b
   unpack (Vec2D a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -184,6 +194,7 @@ instance PackedVec (Vec2 Double) where
 
 instance PackedVec (Vec3 Double) where
   data Packed (Vec3 Double) = Vec3D {-#UNPACK#-} !Double {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3D a b c;
   unpack (Vec3D a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -191,6 +202,7 @@ instance PackedVec (Vec3 Double) where
 
 instance PackedVec (Vec4 Double) where
   data Packed (Vec4 Double) = Vec4D {-#UNPACK#-} !Double {-#UNPACK#-} !Double  {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4D a b c d
   unpack (Vec4D a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -216,19 +228,6 @@ packMat = map pack
 unpackMat ::  (Map (Packed row) row packedMat mat, PackedVec row)
              => packedMat -> mat
 unpackMat = map unpack
-
-instance (Eq v, PackedVec v) => Eq (Packed v) where
-  u == v  =  unpack u == unpack v
-  u /= v  =  unpack u /= unpack v
-  {-# INLINE (==) #-}
-  {-# INLINE (/=) #-}
-
-instance (Ord v, PackedVec v) => Ord (Packed v) where
-  compare u v = compare (unpack u) (unpack v)
-  {-# INLINE compare #-}
-
-instance (Show v, PackedVec v) => Show (Packed v) where
-  show v = show (unpack v)
 
 instance (Map a b u v, PackedVec u, PackedVec v)
           => Map a b (Packed u) (Packed v)
