@@ -58,6 +58,7 @@ import Data.Vec.LinAlg --just for haddock
 import Data.Word
 import Data.Int
 import Foreign
+import Foreign.C
 
 import Data.Array.Base  as Array
 import GHC.ST        ( ST(..), runST )
@@ -86,10 +87,9 @@ class PackedVec v where
         unpack (pack x) = x;  #-}
 
 
-
-
 instance PackedVec (Vec2 Bool) where
   data Packed (Vec2 Bool) = Vec2B !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2B a b
   unpack (Vec2B a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -97,6 +97,7 @@ instance PackedVec (Vec2 Bool) where
 
 instance PackedVec (Vec3 Bool) where
   data Packed (Vec3 Bool) = Vec3B !Bool !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3B a b c
   unpack (Vec3B a b c) = a:.b:.c:.()
   {-# INLINE pack #-}
@@ -104,6 +105,7 @@ instance PackedVec (Vec3 Bool) where
 
 instance PackedVec (Vec4 Bool) where
   data Packed (Vec4 Bool) = Vec4B !Bool !Bool !Bool !Bool
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4B a b c d
   unpack (Vec4B a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -119,6 +121,7 @@ type Vec4B = Packed (Vec4 Bool)
 
 instance PackedVec (Vec2 Int) where
   data Packed (Vec2 Int) = Vec2I {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2I a b
   unpack (Vec2I a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -126,6 +129,7 @@ instance PackedVec (Vec2 Int) where
 
 instance PackedVec (Vec3 Int) where
   data Packed (Vec3 Int) = Vec3I {-#UNPACK#-} !Int {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3I a b c;
   unpack (Vec3I a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -133,6 +137,7 @@ instance PackedVec (Vec3 Int) where
 
 instance PackedVec (Vec4 Int) where
   data Packed (Vec4 Int) = Vec4I {-#UNPACK#-} !Int {-#UNPACK#-} !Int  {-#UNPACK#-} !Int {-#UNPACK#-} !Int
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4I a b c d
   unpack (Vec4I a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -148,6 +153,7 @@ type Vec4I = Packed (Vec4 Int)
 
 instance PackedVec (Vec2 Float) where
   data Packed (Vec2 Float) = Vec2F {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2F a b
   unpack (Vec2F a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -155,6 +161,7 @@ instance PackedVec (Vec2 Float) where
 
 instance PackedVec (Vec3 Float) where
   data Packed (Vec3 Float) = Vec3F {-#UNPACK#-} !Float {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3F a b c;
   unpack (Vec3F a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -162,6 +169,7 @@ instance PackedVec (Vec3 Float) where
 
 instance PackedVec (Vec4 Float) where
   data Packed (Vec4 Float) = Vec4F {-#UNPACK#-} !Float {-#UNPACK#-} !Float  {-#UNPACK#-} !Float {-#UNPACK#-} !Float
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4F a b c d
   unpack (Vec4F a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -177,6 +185,7 @@ type Vec4F = Packed (Vec4 Float)
 
 instance PackedVec (Vec2 Double) where
   data Packed (Vec2 Double) = Vec2D {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.()) = Vec2D a b
   unpack (Vec2D a b) = a:.b:.()
   {-# INLINE pack #-}
@@ -184,6 +193,7 @@ instance PackedVec (Vec2 Double) where
 
 instance PackedVec (Vec3 Double) where
   data Packed (Vec3 Double) = Vec3D {-#UNPACK#-} !Double {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.()) = Vec3D a b c;
   unpack (Vec3D a b c) = a:.b:.c:.();
   {-# INLINE pack #-}
@@ -191,6 +201,7 @@ instance PackedVec (Vec3 Double) where
 
 instance PackedVec (Vec4 Double) where
   data Packed (Vec4 Double) = Vec4D {-#UNPACK#-} !Double {-#UNPACK#-} !Double  {-#UNPACK#-} !Double {-#UNPACK#-} !Double
+    deriving (Eq, Ord, Show, Read)
   pack (a:.b:.c:.d:.()) = Vec4D a b c d
   unpack (Vec4D a b c d) = a:.b:.c:.d:.()
   {-# INLINE pack #-}
@@ -199,6 +210,104 @@ instance PackedVec (Vec4 Double) where
 type Vec2D = Packed (Vec2 Double)
 type Vec3D = Packed (Vec3 Double)
 type Vec4D = Packed (Vec4 Double)
+
+
+
+
+
+instance PackedVec (Vec2 CFloat) where
+    data Packed (Vec2 CFloat) = Vec2CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CF x y
+    unpack (Vec2CF x y) = x:.y:.()
+
+instance PackedVec (Vec3 CFloat) where
+    data Packed (Vec3 CFloat) = Vec3CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CF x y z
+    unpack (Vec3CF x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CFloat) where
+    data Packed (Vec4 CFloat) = Vec4CF {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat {-# UNPACK #-} !CFloat
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CF x y z w
+    unpack (Vec4CF x y z w) = x:.y:.z:.w:.()
+
+type Vec2CF = Packed (Vec2 CFloat)
+type Vec3CF = Packed (Vec3 CFloat)
+type Vec4CF = Packed (Vec4 CFloat)
+
+
+
+
+
+instance PackedVec (Vec2 CInt) where
+    data Packed (Vec2 CInt) = Vec2CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CI x y
+    unpack (Vec2CI x y) = x:.y:.()
+
+instance PackedVec (Vec3 CInt) where
+    data Packed (Vec3 CInt) = Vec3CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CI x y z
+    unpack (Vec3CI x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CInt) where
+    data Packed (Vec4 CInt) = Vec4CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CI x y z w
+    unpack (Vec4CI x y z w) = x:.y:.z:.w:.()
+
+type Vec2CI = Packed (Vec2 CInt)
+type Vec3CI = Packed (Vec3 CInt)
+type Vec4CI = Packed (Vec4 CInt)
+
+
+
+
+instance PackedVec (Vec2 CDouble) where
+    data Packed (Vec2 CDouble) = Vec2CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CD x y
+    unpack (Vec2CD x y) = x:.y:.()
+
+instance PackedVec (Vec3 CDouble) where
+    data Packed (Vec3 CDouble) = Vec3CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CD x y z
+    unpack (Vec3CD x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CDouble) where
+    data Packed (Vec4 CDouble) = Vec4CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CD x y z w
+    unpack (Vec4CD x y z w) = x:.y:.z:.w:.()
+
+type Vec2CD = Packed (Vec2 CDouble)
+type Vec3CD = Packed (Vec3 CDouble)
+type Vec4CD = Packed (Vec4 CDouble)
+
+
+
 
 type Mat22D = Vec2 (Vec2D)
 type Mat23D = Vec2 (Vec3D)
@@ -216,19 +325,6 @@ packMat = map pack
 unpackMat ::  (Map (Packed row) row packedMat mat, PackedVec row)
              => packedMat -> mat
 unpackMat = map unpack
-
-instance (Eq v, PackedVec v) => Eq (Packed v) where
-  u == v  =  unpack u == unpack v
-  u /= v  =  unpack u /= unpack v
-  {-# INLINE (==) #-}
-  {-# INLINE (/=) #-}
-
-instance (Ord v, PackedVec v) => Ord (Packed v) where
-  compare u v = compare (unpack u) (unpack v)
-  {-# INLINE compare #-}
-
-instance (Show v, PackedVec v) => Show (Packed v) where
-  show v = show (unpack v)
 
 instance (Map a b u v, PackedVec u, PackedVec v)
           => Map a b (Packed u) (Packed v)
