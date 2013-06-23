@@ -246,6 +246,38 @@ type Vec4CF = Packed (Vec4 CFloat)
 
 
 
+
+instance PackedVec (Vec2 CInt) where
+    data Packed (Vec2 CInt) = Vec2CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.()) = Vec2CI x y
+    unpack (Vec2CI x y) = x:.y:.()
+
+instance PackedVec (Vec3 CInt) where
+    data Packed (Vec3 CInt) = Vec3CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.()) = Vec3CI x y z
+    unpack (Vec3CI x y z) = x:.y:.z:.()
+
+instance PackedVec (Vec4 CInt) where
+    data Packed (Vec4 CInt) = Vec4CI {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt {-# UNPACK #-} !CInt
+      deriving (Eq, Ord, Show, Read)
+    {-# INLINE pack #-}
+    {-# INLINE unpack #-}
+    pack (x:.y:.z:.w:.()) = Vec4CI x y z w
+    unpack (Vec4CI x y z w) = x:.y:.z:.w:.()
+
+type Vec2CI = Packed (Vec2 CInt)
+type Vec3CI = Packed (Vec3 CInt)
+type Vec4CI = Packed (Vec4 CInt)
+
+
+
+
 instance PackedVec (Vec2 CDouble) where
     data Packed (Vec2 CDouble) = Vec2CD {-# UNPACK #-} !CDouble {-# UNPACK #-} !CDouble
       deriving (Eq, Ord, Show, Read)
