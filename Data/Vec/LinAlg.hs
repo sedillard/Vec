@@ -53,7 +53,7 @@ module Data.Vec.LinAlg
   ,rotationLookAt
   ,scaling
   ,perspective
-  ,orthogonal  
+  ,orthogonal
   ) where
 
 import Prelude hiding (map,zipWith,foldl,foldr,reverse,take,drop,
@@ -233,7 +233,7 @@ instance
 
 
 
-class SetDiagonal v m | m -> v, v -> m where
+class SetDiagonal v m where
   -- |set the diagonal of an n-by-n matrix to a given n-vector
   setDiagonal :: v -> m -> m
 
@@ -531,7 +531,6 @@ instance NearZero Rational where
 class Pivot1 a m where
   pivot1 :: m -> Maybe (m,a)
 
---this instance prevents a fundep inferring type of a from m.
 instance Pivot1 a () where
   pivot1 _ = Nothing
 
@@ -564,7 +563,7 @@ instance
   where
     pivot1 (row@(p:._):.rows)
       | nearZero p = pivot1 rows >>= \(r:.rs,p)-> Just(r:.row:.rs,p)
-      | otherwise  = Just ( first :. map add rows , p)
+      | otherwise  = Just (first :. map add rows , p)
           where first        = map (/p) row
                 add r@(x:._) = zipWith (-) r . map (*x) $ first
     {-# INLINE pivot1 #-}
@@ -573,11 +572,11 @@ instance
 -- Pivot : find a pivot. Second return argument tracks determinant.
 -- Returns Nothing if no pivot anywhere.
 
-class Pivot a m | m -> a where
+class Pivot a m where
   pivot :: m -> Maybe (m,a)
 
 instance Pivot a (():.v) where
-  pivot _ = Nothing
+  pivot m = Nothing
   {-# INLINE pivot #-}
 
 instance
@@ -612,7 +611,7 @@ class GaussElim a m | m -> a where
 
   gaussElim :: m -> (m,a)
 
-instance (Num a, Pivot a (r:.())) => GaussElim a (r:.())
+instance (Num a, Pivot a ((a :. r):.())) => GaussElim a ((a :. r):.())
   where
     gaussElim m = fromMaybe (m,1) (pivot m)
     {-# INLINE gaussElim #-}

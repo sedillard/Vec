@@ -16,7 +16,7 @@ stuff :: UArray Int (Vec4 Double) -> UArray Int (Vec4 Double) -> UArray Int (Vec
 stuff a b =
   let (0,n) = bounds a in
   runST $
-    do 
+    do
     c <- newArray_ (0,n) :: ST s (STUArray s Int (Vec4 Double))
     forM_ [0..n] $ \i -> writeArray c i ((a!i)+(b!i))
     unsafeFreeze c
