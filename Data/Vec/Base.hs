@@ -279,7 +279,7 @@ reverse ::  (Reverse' () v v') => v -> v'
 reverse v = reverse' () v
 {-# INLINE reverse #-}
 
--- really the type of reverse should b v->v but somehow this makes inference easier
+-- really the type of reverse should be v->v but somehow this makes inference easier
 
 
 -- | Reverse helper function : accumulates the reversed list in its first argument
